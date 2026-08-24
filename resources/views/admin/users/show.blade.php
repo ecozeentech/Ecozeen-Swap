@@ -1,0 +1,107 @@
+<x-admin-layout>
+    <x-slot name="title">{{ $user->name }}</x-slot>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold">{{ $user->name }}</h2>
+                        <p class="text-sm text-charcoal-400">{{ $user->username }} &middot; {{ $user->email }} &middot; {{ $user->phone }}</p>
+                    </div>
+                    @if ($user->is_suspended)
+                        <form method="POST" action="{{ route('admin.users.unsuspend', $user) }}">
+                            @csrf
+                            <x-secondary-button type="submit">Unsuspend</x-secondary-button>
+                        </form>
+                    @else
+                        <form method="POST" action="{{ route('admin.users.suspend', $user) }}" onsubmit="return confirm('Suspend this user?')">
+                            @csrf
+                            <input type="hidden" name="reason" value="Suspended by admin">
+                            <x-danger-button type="submit">Suspend</x-danger-button>
+                        </form>
+                    @endif
+                </div>
+
+                <form method="POST" action="{{ route('admin.users.update', $user) }}" class="flex items-end gap-3">
+                    @csrf
+                    @method('PUT')
+                    <div class="flex-1">
+                        <x-input-label value="Daily Trade Limit (USD)" />
+                        <x-text-input name="daily_trade_limit" type="number" step="0.01" value="{{ $user->daily_trade_limit }}" class="mt-1 w-full" />
+                    </div>
+                    <x-primary-button type="submit">Update</x-primary-button>
+                </form>
+            </div>
+
+            <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 shadow-sm">
+                <div class="px-5 py-4 border-b border-charcoal-100 dark:border-charcoal-800"><h3 class="font-semibold">Wallets</h3></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-5">
+                    @foreach ($user->wallets as $wallet)
+                        <div class="rounded-xl bg-charcoal-50 dark:bg-charcoal-800 px-4 py-3">
+                            <p class="text-xs text-charcoal-400">{{ $wallet->currency_code }}</p>
+                            <p class="font-bold">{{ number_format($wallet->balance, 6) }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 shadow-sm">
+                <div class="px-5 py-4 border-b border-charcoal-100 dark:border-charcoal-800"><h3 class="font-semibold">KYC Documents</h3></div>
+                <div class="divide-y divide-charcoal-100 dark:divide-charcoal-800">
+                    @forelse ($user->kycDocuments as $doc)
+                        <div class="px-5 py-3 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-semibold capitalize">{{ str_replace('_', ' ', $doc->document_type) }}</p>
+                                <p class="text-xs text-charcoal-400">{{ $doc->created_at->diffForHumans() }}</p>
+                            </div>
+                            @if ($doc->status === 'pending')
+                                <div class="flex gap-2">
+                                    <form method="POST" action="{{ route('admin.kyc.approve', $doc) }}"><input type="hidden" name="_dummy"> @csrf<x-primary-button class="!text-[10px] !px-3 !py-1.5">Approve</x-primary-button></form>
+                                    <form method="POST" action="{{ route('admin.kyc.reject', $doc) }}" onsubmit="return promptRejectReason(this)">@csrf<input type="hidden" name="reason" value=""><x-danger-button class="!text-[10px] !px-3 !py-1.5">Reject</x-danger-button></form>
+                                </div>
+                            @else
+                                <span class="text-xs font-medium px-2 py-0.5 rounded-full capitalize {{ $doc->status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">{{ $doc->status }}</span>
+                            @endif
+                        </div>
+                    @empty
+                        <p class="px-5 py-6 text-sm text-charcoal-400 text-center">No documents uploaded.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 shadow-sm">
+                <div class="px-5 py-4 border-b border-charcoal-100 dark:border-charcoal-800"><h3 class="font-semibold">Transactions</h3></div>
+                <div class="divide-y divide-charcoal-100 dark:divide-charcoal-800 max-h-96 overflow-y-auto">
+                    @foreach ($transactions as $tx)
+                        <div class="px-5 py-3 flex items-center justify-between text-sm">
+                            <span class="capitalize">{{ $tx->type }} &middot; {{ $tx->reference }}</span>
+                            <span>{{ number_format($tx->amount, 4) }} {{ $tx->currency_code }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 shadow-sm">
+            <div class="px-5 py-4 border-b border-charcoal-100 dark:border-charcoal-800"><h3 class="font-semibold">Activity Log</h3></div>
+            <div class="divide-y divide-charcoal-100 dark:divide-charcoal-800 max-h-[40rem] overflow-y-auto">
+                @foreach ($activityLogs as $log)
+                    <div class="px-5 py-3">
+                        <p class="text-sm font-semibold capitalize">{{ str_replace('_', ' ', $log->action) }}</p>
+                        <p class="text-xs text-charcoal-400">{{ $log->ip_address }} &middot; {{ $log->created_at->diffForHumans() }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function promptRejectReason(form) {
+            const reason = prompt('Rejection reason:');
+            if (!reason) return false;
+            form.querySelector('input[name="reason"]').value = reason;
+            return true;
+        }
+    </script>
+</x-admin-layout>
