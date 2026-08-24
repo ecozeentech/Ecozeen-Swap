@@ -19,6 +19,9 @@ class DatabaseSeeder extends Seeder
             SystemSettingSeeder::class,
             AdminUserSeeder::class,
             DailyRateSeeder::class,
+            GiftCardProductSeeder::class,
+            PageSeeder::class,
+            BlogSeeder::class,
         ]);
     }
 }
