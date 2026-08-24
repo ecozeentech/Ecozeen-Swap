@@ -12,6 +12,7 @@ class GiftCard extends Model
 
     protected $fillable = [
         'user_id',
+        'gift_card_product_id',
         'card_type',
         'card_number_hashed',
         'pin',
@@ -47,6 +48,11 @@ class GiftCard extends Model
     public function verifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(GiftCardProduct::class, 'gift_card_product_id');
     }
 
     public function maskedCardNumber(): string

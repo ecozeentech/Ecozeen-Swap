@@ -26,6 +26,12 @@ class User extends Authenticatable implements MustVerifyEmail
         'username',
         'email',
         'phone',
+        'avatar',
+        'address',
+        'city',
+        'state',
+        'country',
+        'postal_code',
         'password',
         'kyc_status',
         'daily_trade_limit',
@@ -122,6 +128,27 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where('currency_type', $currencyType)
             ->where('currency_code', $currencyCode)
             ->first();
+    }
+
+    public function avatarUrl(): ?string
+    {
+        if ($this->avatar && str_starts_with($this->avatar, 'http')) {
+            return $this->avatar;
+        }
+
+        return $this->avatar ? asset('storage/'.$this->avatar) : null;
+    }
+
+    public function countryName(): ?string
+    {
+        return $this->country ? (config('countries')[$this->country] ?? $this->country) : null;
+    }
+
+    public function fullAddress(): ?string
+    {
+        $parts = array_filter([$this->address, $this->city, $this->state, $this->countryName(), $this->postal_code]);
+
+        return $parts ? implode(', ', $parts) : null;
     }
 
     protected static function booted(): void
