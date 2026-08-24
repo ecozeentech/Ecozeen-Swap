@@ -16,9 +16,15 @@
             <h3 class="text-sm font-semibold text-charcoal-500 dark:text-charcoal-400 mb-3 uppercase tracking-wide">Your Crypto Balances</h3>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 @foreach ($wallets as $wallet)
+                    @php $asset = $cryptoAssets->firstWhere('symbol', $wallet->currency_code); @endphp
                     <div class="rounded-xl bg-charcoal-50 dark:bg-charcoal-800 px-4 py-3">
-                        <p class="text-xs text-charcoal-400">{{ $wallet->currency_code }}</p>
-                        <p class="font-bold text-charcoal-900 dark:text-white">{{ number_format($wallet->balance, 6) }}</p>
+                        <div class="flex items-center gap-2">
+                            @if ($asset)
+                                <img src="{{ $asset->logoUrl() }}" class="h-5 w-5 rounded-full object-cover" alt="">
+                            @endif
+                            <p class="text-xs text-charcoal-400">{{ $wallet->currency_code }}</p>
+                        </div>
+                        <p class="font-bold text-charcoal-900 dark:text-white mt-1">{{ number_format($wallet->balance, 6) }}</p>
                     </div>
                 @endforeach
             </div>

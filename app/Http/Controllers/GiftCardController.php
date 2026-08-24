@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\GiftCard;
+use App\Models\GiftCardProduct;
 use App\Models\SystemSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,28 +14,38 @@ class GiftCardController extends Controller
 {
     public function index(Request $request): View
     {
-        $giftCards = $request->user()->giftCards()->latest()->paginate(10);
+        $user = $request->user();
+        $giftCards = $user->giftCards()->with('product')->latest()->paginate(10);
+
+        $products = GiftCardProduct::query()->active()->orderBy('sort_order')->orderBy('name')->get()
+            ->filter(fn (GiftCardProduct $product) => $product->isAvailableIn($user->country))
+            ->values();
 
         return view('giftcards.index', [
             'giftCards' => $giftCards,
-            'cardTypes' => ['Amazon', 'iTunes', 'Steam', 'Google Play', 'Walmart', 'eBay', 'Razer Gold', 'Vanilla Visa', 'Other'],
-            'buybackRate' => (float) SystemSetting::get('giftcard_buyback_rate', 75), // % of face value
+            'products' => $products,
+            'defaultBuybackRate' => (float) SystemSetting::get('giftcard_buyback_rate', 75),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'card_type' => ['required', 'string', 'max:100'],
+            'gift_card_product_id' => ['required', 'exists:gift_card_products,id'],
             'card_number' => ['required', 'string', 'max:100'],
             'pin' => ['nullable', 'string', 'max:50'],
             'face_value' => ['required', 'numeric', 'min:1'],
-            'face_value_currency' => ['required', 'string', 'max:6'],
             'card_image' => ['nullable', 'image', 'max:5120'],
         ]);
 
         $user = $request->user();
-        $rate = (float) SystemSetting::get('giftcard_buyback_rate', 75);
+        $product = GiftCardProduct::query()->active()->findOrFail($request->input('gift_card_product_id'));
+
+        if (! $product->isAvailableIn($user->country)) {
+            return back()->withErrors(['gift_card_product_id' => 'This gift card is not available in your country.']);
+        }
+
+        $rate = (float) ($product->rate_override ?? SystemSetting::get('giftcard_buyback_rate', 75));
         $sellingPrice = round($request->input('face_value') * ($rate / 100), 2);
 
         $imagePath = $request->hasFile('card_image')
@@ -43,15 +54,16 @@ class GiftCardController extends Controller
 
         $giftCard = GiftCard::create([
             'user_id' => $user->id,
-            'card_type' => $request->input('card_type'),
+            'gift_card_product_id' => $product->id,
+            'card_type' => $product->name,
             'card_number_hashed' => $request->input('card_number'),
             'pin' => $request->input('pin'),
             'card_image' => $imagePath,
             'face_value' => $request->input('face_value'),
-            'face_value_currency' => $request->input('face_value_currency'),
+            'face_value_currency' => $product->currency,
             'rate_applied' => $rate,
             'selling_price' => $sellingPrice,
-            'payout_currency' => $request->input('face_value_currency'),
+            'payout_currency' => $product->currency,
             'status' => 'pending',
         ]);
 

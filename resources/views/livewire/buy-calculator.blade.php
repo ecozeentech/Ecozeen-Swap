@@ -2,21 +2,33 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
             <label class="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1">You receive</label>
-            <select wire:model.live="cryptoAssetId" name="crypto_asset_id" required class="w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
-                <option value="">Select crypto</option>
-                @foreach ($this->cryptoAssets as $asset)
-                    <option value="{{ $asset->id }}">{{ $asset->name }} ({{ $asset->symbol }})</option>
-                @endforeach
-            </select>
+            <div class="flex items-center gap-2">
+                @php $selectedCrypto = $this->cryptoAssets->firstWhere('id', $cryptoAssetId); @endphp
+                @if ($selectedCrypto)
+                    <img src="{{ $selectedCrypto->logoUrl() }}" class="h-8 w-8 rounded-full flex-shrink-0" alt="">
+                @endif
+                <select wire:model.live="cryptoAssetId" name="crypto_asset_id" required class="w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
+                    <option value="">Select crypto</option>
+                    @foreach ($this->cryptoAssets as $asset)
+                        <option value="{{ $asset->id }}">{{ $asset->name }} ({{ $asset->symbol }})</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
         <div>
             <label class="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1">Pay with</label>
-            <select wire:model.live="fiatCurrencyId" name="fiat_currency_id" required class="w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
-                <option value="">Select currency</option>
-                @foreach ($this->fiatCurrencies as $fiat)
-                    <option value="{{ $fiat->id }}">{{ $fiat->name }} ({{ $fiat->code }})</option>
-                @endforeach
-            </select>
+            <div class="flex items-center gap-2">
+                @php $selectedFiat = $this->fiatCurrencies->firstWhere('id', $fiatCurrencyId); @endphp
+                @if ($selectedFiat)
+                    <img src="{{ $selectedFiat->logoUrl() }}" class="h-8 w-8 rounded-full flex-shrink-0" alt="">
+                @endif
+                <select wire:model.live="fiatCurrencyId" name="fiat_currency_id" required class="w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
+                    <option value="">Select currency</option>
+                    @foreach ($this->fiatCurrencies as $fiat)
+                        <option value="{{ $fiat->id }}">{{ $fiat->name }} ({{ $fiat->code }})</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
     </div>
 

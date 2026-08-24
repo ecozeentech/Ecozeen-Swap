@@ -1,11 +1,11 @@
 <section>
     <header>
-        <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+        <h2 class="text-lg font-medium text-charcoal-900 dark:text-charcoal-100">
             {{ __('Profile Information') }}
         </h2>
 
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {{ __("Update your account's profile information and email address.") }}
+        <p class="mt-1 text-sm text-charcoal-500 dark:text-charcoal-400">
+            {{ __('Update your photo, contact details, address, and email address.') }}
         </p>
     </header>
 
@@ -13,9 +13,22 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="mt-6 space-y-6">
         @csrf
         @method('patch')
+
+        <div class="flex items-center gap-4">
+            @if ($user->avatarUrl())
+                <img src="{{ $user->avatarUrl() }}" alt="{{ $user->name }}" class="h-16 w-16 rounded-full object-cover">
+            @else
+                <span class="h-16 w-16 rounded-full bg-brand-500 text-white flex items-center justify-center text-2xl font-bold">{{ substr($user->name, 0, 1) }}</span>
+            @endif
+            <div>
+                <x-input-label for="avatar" :value="__('Profile Photo')" />
+                <input id="avatar" name="avatar" type="file" accept="image/*" class="mt-1 text-sm text-charcoal-600 dark:text-charcoal-300">
+                <x-input-error class="mt-2" :messages="$errors->get('avatar')" />
+            </div>
+        </div>
 
         <div>
             <x-input-label for="name" :value="__('Name')" />
@@ -42,10 +55,10 @@
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
                 <div>
-                    <p class="text-sm mt-2 text-gray-800 dark:text-gray-200">
+                    <p class="text-sm mt-2 text-charcoal-700 dark:text-charcoal-300">
                         {{ __('Your email address is unverified.') }}
 
-                        <button form="send-verification" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
+                        <button form="send-verification" class="underline text-sm text-charcoal-500 dark:text-charcoal-400 hover:text-brand-600">
                             {{ __('Click here to re-send the verification email.') }}
                         </button>
                     </p>
@@ -59,6 +72,49 @@
             @endif
         </div>
 
+        <div class="border-t border-charcoal-100 dark:border-charcoal-800 pt-6">
+            <h3 class="text-sm font-semibold text-charcoal-700 dark:text-charcoal-300 mb-4">{{ __('Address') }}</h3>
+
+            <div class="space-y-4">
+                <div>
+                    <x-input-label for="address" :value="__('Street Address')" />
+                    <x-text-input id="address" name="address" type="text" class="mt-1 block w-full" :value="old('address', $user->address)" autocomplete="street-address" />
+                    <x-input-error class="mt-2" :messages="$errors->get('address')" />
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <x-input-label for="city" :value="__('City')" />
+                        <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city', $user->city)" autocomplete="address-level2" />
+                        <x-input-error class="mt-2" :messages="$errors->get('city')" />
+                    </div>
+                    <div>
+                        <x-input-label for="state" :value="__('State / Region')" />
+                        <x-text-input id="state" name="state" type="text" class="mt-1 block w-full" :value="old('state', $user->state)" autocomplete="address-level1" />
+                        <x-input-error class="mt-2" :messages="$errors->get('state')" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <x-input-label for="country" :value="__('Country')" />
+                        <select id="country" name="country" class="mt-1 block w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
+                            <option value="">{{ __('Select country') }}</option>
+                            @foreach ($countries as $code => $name)
+                                <option value="{{ $code }}" @selected(old('country', $user->country) === $code)>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error class="mt-2" :messages="$errors->get('country')" />
+                    </div>
+                    <div>
+                        <x-input-label for="postal_code" :value="__('Postal Code')" />
+                        <x-text-input id="postal_code" name="postal_code" type="text" class="mt-1 block w-full" :value="old('postal_code', $user->postal_code)" autocomplete="postal-code" />
+                        <x-input-error class="mt-2" :messages="$errors->get('postal_code')" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 
@@ -68,7 +124,7 @@
                     x-show="show"
                     x-transition
                     x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600 dark:text-gray-400"
+                    class="text-sm text-charcoal-500 dark:text-charcoal-400"
                 >{{ __('Saved.') }}</p>
             @endif
         </div>

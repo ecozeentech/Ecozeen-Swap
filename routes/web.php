@@ -1,35 +1,69 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\BlogCategoryController as AdminBlogCategoryController;
+use App\Http\Controllers\Admin\BlogPostController as AdminBlogPostController;
+use App\Http\Controllers\Admin\BrandingController;
+use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\CryptoAssetController;
 use App\Http\Controllers\Admin\DailyRateController;
 use App\Http\Controllers\Admin\FeatureToggleController;
 use App\Http\Controllers\Admin\FiatCurrencyController;
+use App\Http\Controllers\Admin\GiftCardProductController;
 use App\Http\Controllers\Admin\GiftCardVerificationController;
+use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\PaymentGatewayController;
 use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BuyController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GiftCardController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Security\ActivityLogController;
 use App\Http\Controllers\Security\IpVerificationController;
 use App\Http\Controllers\Security\KycController;
 use App\Http\Controllers\Security\TwoFactorController;
 use App\Http\Controllers\SellController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\SwapController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WebhookController;
+use App\Services\RateService;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return auth()->check() ? redirect()->route('dashboard') : view('welcome');
+Route::get('/', function (RateService $rates) {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+
+    return view('welcome', ['activeRates' => $rates->allActiveRates()->take(6)]);
 })->name('home');
+
+/*
+|--------------------------------------------------------------------------
+| Public Content: About, Contact, Policies, Blog, Sitemap
+|--------------------------------------------------------------------------
+*/
+Route::get('/about-us', [PageController::class, 'about'])->name('about.show');
+Route::get('/contact-us', [ContactController::class, 'show'])->name('contact.show');
+Route::post('/contact-us', [ContactController::class, 'store'])->middleware('throttle:6,1')->name('contact.store');
+Route::get('/privacy-policy', fn () => app(PageController::class)->show('privacy-policy'))->name('policy.privacy');
+Route::get('/terms-of-service', fn () => app(PageController::class)->show('terms-of-service'))->name('policy.terms');
+
+Route::prefix('blog')->name('blog.')->group(function () {
+    Route::get('/', [BlogController::class, 'index'])->name('index');
+    Route::get('/category/{slug}', [BlogController::class, 'category'])->name('category');
+    Route::get('/{slug}', [BlogController::class, 'show'])->name('show');
+});
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 /*
 |--------------------------------------------------------------------------
@@ -129,6 +163,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [UserManagementController::class, 'show'])->name('users.show');
     Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
+    Route::put('/users/{user}/profile', [UserManagementController::class, 'updateProfile'])->name('users.update-profile');
+    Route::put('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.update-role');
     Route::post('/users/{user}/suspend', [UserManagementController::class, 'suspend'])->name('users.suspend');
     Route::post('/users/{user}/unsuspend', [UserManagementController::class, 'unsuspend'])->name('users.unsuspend');
     Route::post('/kyc-documents/{kycDocument}/approve', [UserManagementController::class, 'approveKyc'])->name('kyc.approve');
@@ -137,15 +173,20 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/crypto', [CryptoAssetController::class, 'index'])->name('crypto.index');
     Route::post('/crypto', [CryptoAssetController::class, 'store'])->name('crypto.store');
     Route::put('/crypto/{cryptoAsset}', [CryptoAssetController::class, 'update'])->name('crypto.update');
+    Route::post('/crypto/{cryptoAsset}/toggle', [CryptoAssetController::class, 'toggleActive'])->name('crypto.toggle');
     Route::delete('/crypto/{cryptoAsset}', [CryptoAssetController::class, 'destroy'])->name('crypto.destroy');
 
     Route::get('/fiat', [FiatCurrencyController::class, 'index'])->name('fiat.index');
     Route::post('/fiat', [FiatCurrencyController::class, 'store'])->name('fiat.store');
     Route::put('/fiat/{fiatCurrency}', [FiatCurrencyController::class, 'update'])->name('fiat.update');
+    Route::post('/fiat/{fiatCurrency}/toggle', [FiatCurrencyController::class, 'toggleActive'])->name('fiat.toggle');
+    Route::delete('/fiat/{fiatCurrency}', [FiatCurrencyController::class, 'destroy'])->name('fiat.destroy');
 
     Route::get('/rates', [DailyRateController::class, 'index'])->name('rates.index');
     Route::post('/rates', [DailyRateController::class, 'store'])->name('rates.store');
     Route::put('/rates/{dailyRate}', [DailyRateController::class, 'update'])->name('rates.update');
+    Route::post('/rates/{dailyRate}/toggle', [DailyRateController::class, 'toggleActive'])->name('rates.toggle');
+    Route::delete('/rates/{dailyRate}', [DailyRateController::class, 'destroy'])->name('rates.destroy');
 
     Route::get('/features', [FeatureToggleController::class, 'index'])->name('features.index');
 
@@ -154,6 +195,12 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::post('/transactions/{transaction}/mark-paid', [AdminTransactionController::class, 'markPaid'])->name('transactions.mark-paid');
     Route::post('/transactions/{transaction}/confirm-sell', [AdminTransactionController::class, 'confirmSell'])->name('transactions.confirm-sell');
     Route::post('/transactions/{transaction}/reject', [AdminTransactionController::class, 'reject'])->name('transactions.reject');
+
+    Route::get('/giftcard-products', [GiftCardProductController::class, 'index'])->name('giftcard-products.index');
+    Route::post('/giftcard-products', [GiftCardProductController::class, 'store'])->name('giftcard-products.store');
+    Route::put('/giftcard-products/{giftCardProduct}', [GiftCardProductController::class, 'update'])->name('giftcard-products.update');
+    Route::post('/giftcard-products/{giftCardProduct}/toggle', [GiftCardProductController::class, 'toggleActive'])->name('giftcard-products.toggle');
+    Route::delete('/giftcard-products/{giftCardProduct}', [GiftCardProductController::class, 'destroy'])->name('giftcard-products.destroy');
 
     Route::get('/giftcards', [GiftCardVerificationController::class, 'index'])->name('giftcards.index');
     Route::post('/giftcards/{giftCard}/approve', [GiftCardVerificationController::class, 'approve'])->name('giftcards.approve');
@@ -166,6 +213,44 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     Route::get('/settings', [SystemSettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SystemSettingController::class, 'update'])->name('settings.update');
+
+    Route::get('/branding', [BrandingController::class, 'edit'])->name('branding.edit');
+    Route::put('/branding', [BrandingController::class, 'update'])->name('branding.update');
+    Route::delete('/branding/{key}', [BrandingController::class, 'reset'])->name('branding.reset');
+
+    Route::get('/pages', [AdminPageController::class, 'index'])->name('pages.index');
+    Route::get('/pages/create', [AdminPageController::class, 'create'])->name('pages.create');
+    Route::post('/pages', [AdminPageController::class, 'store'])->name('pages.store');
+    Route::get('/pages/{page}/edit', [AdminPageController::class, 'edit'])->name('pages.edit');
+    Route::put('/pages/{page}', [AdminPageController::class, 'update'])->name('pages.update');
+    Route::delete('/pages/{page}', [AdminPageController::class, 'destroy'])->name('pages.destroy');
+
+    Route::prefix('blog')->name('blog.')->group(function () {
+        Route::get('/posts', [AdminBlogPostController::class, 'index'])->name('posts.index');
+        Route::get('/posts/create', [AdminBlogPostController::class, 'create'])->name('posts.create');
+        Route::post('/posts', [AdminBlogPostController::class, 'store'])->name('posts.store');
+        Route::get('/posts/{post}/edit', [AdminBlogPostController::class, 'edit'])->name('posts.edit');
+        Route::put('/posts/{post}', [AdminBlogPostController::class, 'update'])->name('posts.update');
+        Route::delete('/posts/{post}', [AdminBlogPostController::class, 'destroy'])->name('posts.destroy');
+
+        Route::get('/categories', [AdminBlogCategoryController::class, 'index'])->name('categories.index');
+        Route::post('/categories', [AdminBlogCategoryController::class, 'store'])->name('categories.store');
+        Route::put('/categories/{blogCategory}', [AdminBlogCategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{blogCategory}', [AdminBlogCategoryController::class, 'destroy'])->name('categories.destroy');
+    });
+
+    Route::get('/contact-messages', [AdminContactMessageController::class, 'index'])->name('contact-messages.index');
+    Route::get('/contact-messages/{contactMessage}', [AdminContactMessageController::class, 'show'])->name('contact-messages.show');
+    Route::post('/contact-messages/{contactMessage}/replied', [AdminContactMessageController::class, 'markReplied'])->name('contact-messages.mark-replied');
+    Route::delete('/contact-messages/{contactMessage}', [AdminContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
 });
 
 require __DIR__.'/auth.php';
+
+/*
+|--------------------------------------------------------------------------
+| Catch-all for admin-created static pages (e.g. /faq)
+|--------------------------------------------------------------------------
+| Registered last so it never shadows a more specific route above.
+*/
+Route::get('/{slug}', [PageController::class, 'show'])->name('pages.show');

@@ -14,6 +14,7 @@ class FiatCurrency extends Model
         'code',
         'name',
         'symbol',
+        'logo',
         'is_active',
         'exchange_rate_to_usd',
     ];
@@ -34,5 +35,14 @@ class FiatCurrency extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function logoUrl(): string
+    {
+        if ($this->logo && str_starts_with($this->logo, 'http')) {
+            return $this->logo;
+        }
+
+        return $this->logo ? asset('storage/'.$this->logo) : asset('images/fiat-placeholder.svg');
     }
 }

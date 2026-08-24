@@ -9,8 +9,8 @@
         <title>{{ config('app.name', 'Ecozeen Swap') }} — {{ $title ?? 'Dashboard' }}</title>
 
         <link rel="manifest" href="{{ asset('manifest.json') }}">
-        <link rel="icon" href="{{ asset('images/icons/icon-192.png') }}">
-        <link rel="apple-touch-icon" href="{{ asset('images/icons/icon-192.png') }}">
+        <link rel="icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'images/icons/icon-192.png') }}">
+        <link rel="apple-touch-icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'images/icons/icon-192.png') }}">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
@@ -72,7 +72,11 @@
                             <x-dropdown align="right" width="56">
                                 <x-slot name="trigger">
                                     <button class="flex items-center gap-2 rounded-full pl-1 pr-3 py-1 hover:bg-charcoal-100 dark:hover:bg-charcoal-800">
-                                        <span class="h-8 w-8 rounded-full bg-brand-500 text-white flex items-center justify-center text-sm font-bold">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                                        @if (auth()->user()->avatarUrl())
+                                            <img src="{{ auth()->user()->avatarUrl() }}" alt="{{ auth()->user()->name }}" class="h-8 w-8 rounded-full object-cover">
+                                        @else
+                                            <span class="h-8 w-8 rounded-full bg-brand-500 text-white flex items-center justify-center text-sm font-bold">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                                        @endif
                                         <span class="hidden sm:block text-sm font-medium">{{ auth()->user()->username }}</span>
                                     </button>
                                 </x-slot>

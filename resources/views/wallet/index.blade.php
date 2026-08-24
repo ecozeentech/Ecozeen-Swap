@@ -14,9 +14,15 @@
             <h3 class="text-sm font-semibold text-charcoal-500 dark:text-charcoal-400 mb-3 uppercase tracking-wide">Fiat Balances</h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 @foreach ($wallets->where('currency_type', 'fiat') as $wallet)
-                    <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-5 shadow-sm">
-                        <p class="text-xs text-charcoal-400">{{ $wallet->currency_code }}</p>
-                        <p class="text-2xl font-extrabold text-charcoal-900 dark:text-white mt-1">{{ number_format($wallet->balance, 2) }}</p>
+                    @php $fiat = $fiatCurrencies->firstWhere('code', $wallet->currency_code); @endphp
+                    <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-5 shadow-sm hover:shadow-md transition">
+                        <div class="flex items-center gap-2">
+                            @if ($fiat)
+                                <img src="{{ $fiat->logoUrl() }}" class="h-6 w-6 rounded-full object-cover" alt="">
+                            @endif
+                            <p class="text-xs font-semibold text-charcoal-400">{{ $wallet->currency_code }}</p>
+                        </div>
+                        <p class="text-2xl font-extrabold text-charcoal-900 dark:text-white mt-2">{{ number_format($wallet->balance, 2) }}</p>
                         @if ((float) $wallet->reserved_balance > 0)
                             <p class="text-xs text-amber-500 mt-1">{{ number_format($wallet->reserved_balance, 2) }} reserved</p>
                         @endif
@@ -29,15 +35,20 @@
             <h3 class="text-sm font-semibold text-charcoal-500 dark:text-charcoal-400 mb-3 uppercase tracking-wide">Crypto Balances</h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 @foreach ($wallets->where('currency_type', 'crypto') as $wallet)
-                    <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-5 shadow-sm">
+                    @php $asset = $cryptoAssets->firstWhere('symbol', $wallet->currency_code); @endphp
+                    <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-5 shadow-sm hover:shadow-md transition">
                         <div class="flex items-center justify-between">
-                            <p class="text-xs text-charcoal-400">{{ $wallet->currency_code }}</p>
-                            @php $asset = $cryptoAssets->firstWhere('symbol', $wallet->currency_code); @endphp
+                            <div class="flex items-center gap-2">
+                                @if ($asset)
+                                    <img src="{{ $asset->logoUrl() }}" class="h-6 w-6 rounded-full object-cover" alt="">
+                                @endif
+                                <p class="text-xs font-semibold text-charcoal-400">{{ $wallet->currency_code }}</p>
+                            </div>
                             @if ($asset)
                                 <a href="{{ route('wallet.deposit', $asset) }}" class="text-xs font-semibold text-brand-600 hover:underline">Deposit</a>
                             @endif
                         </div>
-                        <p class="text-2xl font-extrabold text-charcoal-900 dark:text-white mt-1">{{ number_format($wallet->balance, 6) }}</p>
+                        <p class="text-2xl font-extrabold text-charcoal-900 dark:text-white mt-2">{{ number_format($wallet->balance, 6) }}</p>
                         @if ((float) $wallet->reserved_balance > 0)
                             <p class="text-xs text-amber-500 mt-1">{{ number_format($wallet->reserved_balance, 6) }} reserved</p>
                         @endif

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" width="400" height="240">
+    <rect width="400" height="240" fill="#0a0b0e"/>
+    <rect x="0" y="0" width="400" height="240" fill="#173a2b" opacity="0.6"/>
+    <text x="200" y="128" font-family="Arial, sans-serif" font-size="40" font-weight="800" fill="#ffffff" text-anchor="middle">E</text>
+    <text x="200" y="160" font-family="Arial, sans-serif" font-size="14" fill="#a1d1b7" text-anchor="middle">Ecozeen Swap</text>
+</svg>
