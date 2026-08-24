@@ -14,21 +14,33 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
             <label class="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1">From</label>
-            <select wire:model="fromAssetId" class="w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
-                <option value="">Select asset</option>
-                @foreach ($this->cryptoAssets as $asset)
-                    <option value="{{ $asset->id }}">{{ $asset->name }} ({{ $asset->symbol }})</option>
-                @endforeach
-            </select>
+            <div class="flex items-center gap-2">
+                @php $selectedFrom = $this->cryptoAssets->firstWhere('id', $fromAssetId); @endphp
+                @if ($selectedFrom)
+                    <img src="{{ $selectedFrom->logoUrl() }}" class="h-8 w-8 rounded-full flex-shrink-0" alt="">
+                @endif
+                <select wire:model="fromAssetId" class="w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
+                    <option value="">Select asset</option>
+                    @foreach ($this->cryptoAssets as $asset)
+                        <option value="{{ $asset->id }}">{{ $asset->name }} ({{ $asset->symbol }})</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
         <div>
             <label class="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1">To</label>
-            <select wire:model="toAssetId" class="w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
-                <option value="">Select asset</option>
-                @foreach ($this->cryptoAssets as $asset)
-                    <option value="{{ $asset->id }}">{{ $asset->name }} ({{ $asset->symbol }})</option>
-                @endforeach
-            </select>
+            <div class="flex items-center gap-2">
+                @php $selectedTo = $this->cryptoAssets->firstWhere('id', $toAssetId); @endphp
+                @if ($selectedTo)
+                    <img src="{{ $selectedTo->logoUrl() }}" class="h-8 w-8 rounded-full flex-shrink-0" alt="">
+                @endif
+                <select wire:model="toAssetId" class="w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
+                    <option value="">Select asset</option>
+                    @foreach ($this->cryptoAssets as $asset)
+                        <option value="{{ $asset->id }}">{{ $asset->name }} ({{ $asset->symbol }})</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
     </div>
 

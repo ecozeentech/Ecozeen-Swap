@@ -19,8 +19,9 @@
                     }
                 }" x-init="tick(); setInterval(() => tick(), 1000)">
                 <div class="flex items-center gap-3">
-                    <div class="h-9 w-9 rounded-full bg-brand-50 dark:bg-charcoal-800 flex items-center justify-center font-bold text-brand-600 dark:text-brand-400 text-xs">
-                        {{ $rate->cryptoAsset->symbol }}
+                    <div class="relative h-9 w-9 flex-shrink-0">
+                        <img src="{{ $rate->cryptoAsset->logoUrl() }}" alt="{{ $rate->cryptoAsset->symbol }}" class="h-9 w-9 rounded-full object-cover bg-charcoal-50 dark:bg-charcoal-800">
+                        <img src="{{ $rate->fiatCurrency->logoUrl() }}" alt="{{ $rate->fiatCurrency->code }}" class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full ring-2 ring-white dark:ring-charcoal-900 object-cover">
                     </div>
                     <div>
                         <p class="font-semibold text-sm text-charcoal-900 dark:text-white">{{ $rate->cryptoAsset->symbol }}/{{ $rate->fiatCurrency->code }}</p>

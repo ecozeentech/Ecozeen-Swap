@@ -7,7 +7,7 @@
         <meta name="theme-color" content="#2D6A4F">
         <title>{{ config('app.name', 'Ecozeen Swap') }} Admin — {{ $title ?? 'Dashboard' }}</title>
 
-        <link rel="icon" href="{{ asset('images/icons/icon-192.png') }}">
+        <link rel="icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'images/icons/icon-192.png') }}">
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
 

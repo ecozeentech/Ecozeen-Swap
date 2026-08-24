@@ -5,9 +5,19 @@
         <div class="lg:col-span-2 space-y-6">
             <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 class="text-lg font-bold">{{ $user->name }}</h2>
-                        <p class="text-sm text-charcoal-400">{{ $user->username }} &middot; {{ $user->email }} &middot; {{ $user->phone }}</p>
+                    <div class="flex items-center gap-3">
+                        @if ($user->avatarUrl())
+                            <img src="{{ $user->avatarUrl() }}" class="h-14 w-14 rounded-full object-cover" alt="">
+                        @else
+                            <span class="h-14 w-14 rounded-full bg-brand-500 text-white flex items-center justify-center text-xl font-bold">{{ substr($user->name, 0, 1) }}</span>
+                        @endif
+                        <div>
+                            <h2 class="text-lg font-bold">{{ $user->name }}</h2>
+                            <p class="text-sm text-charcoal-400">{{ $user->username }} &middot; {{ $user->email }} &middot; {{ $user->phone }}</p>
+                            @if ($user->fullAddress())
+                                <p class="text-xs text-charcoal-400 mt-1">{{ $user->fullAddress() }}</p>
+                            @endif
+                        </div>
                     </div>
                     @if ($user->is_suspended)
                         <form method="POST" action="{{ route('admin.users.unsuspend', $user) }}">
@@ -33,6 +43,77 @@
                     <x-primary-button type="submit">Update</x-primary-button>
                 </form>
             </div>
+
+            <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
+                <h3 class="font-semibold mb-4">Profile Details</h3>
+                <form method="POST" action="{{ route('admin.users.update-profile', $user) }}" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    @csrf
+                    @method('PUT')
+                    <div>
+                        <x-input-label value="Full Name" />
+                        <x-text-input name="name" value="{{ $user->name }}" required class="mt-1 w-full" />
+                    </div>
+                    <div>
+                        <x-input-label value="Phone" />
+                        <x-text-input name="phone" value="{{ $user->phone }}" class="mt-1 w-full" />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <x-input-label value="Address" />
+                        <x-text-input name="address" value="{{ $user->address }}" class="mt-1 w-full" />
+                    </div>
+                    <div>
+                        <x-input-label value="City" />
+                        <x-text-input name="city" value="{{ $user->city }}" class="mt-1 w-full" />
+                    </div>
+                    <div>
+                        <x-input-label value="State / Region" />
+                        <x-text-input name="state" value="{{ $user->state }}" class="mt-1 w-full" />
+                    </div>
+                    <div>
+                        <x-input-label value="Country" />
+                        <select name="country" class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white">
+                            <option value="">Select country</option>
+                            @foreach (config('countries') as $code => $name)
+                                <option value="{{ $code }}" @selected($user->country === $code)>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <x-input-label value="Postal Code" />
+                        <x-text-input name="postal_code" value="{{ $user->postal_code }}" class="mt-1 w-full" />
+                    </div>
+                    <div>
+                        <x-input-label value="KYC Status" />
+                        <select name="kyc_status" class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white">
+                            @foreach (['unverified', 'pending', 'verified', 'rejected'] as $status)
+                                <option value="{{ $status }}" @selected($user->kyc_status === $status)>{{ ucfirst($status) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2 flex justify-end">
+                        <x-primary-button type="submit">Save Profile</x-primary-button>
+                    </div>
+                </form>
+            </div>
+
+            @if (auth()->user()->hasRole('super-admin'))
+                <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
+                    <h3 class="font-semibold mb-4">Role &amp; Permissions</h3>
+                    <form method="POST" action="{{ route('admin.users.update-role', $user) }}" class="flex items-end gap-3">
+                        @csrf
+                        @method('PUT')
+                        <div class="flex-1">
+                            <x-input-label value="Role" />
+                            <select name="role" class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white">
+                                @foreach (['user', 'admin', 'super-admin'] as $role)
+                                    <option value="{{ $role }}" @selected($user->hasRole($role))>{{ ucwords(str_replace('-', ' ', $role)) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <x-primary-button type="submit" onclick="return confirm('Change this user&#39;s role?')">Update Role</x-primary-button>
+                    </form>
+                </div>
+            @endif
 
             <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 shadow-sm">
                 <div class="px-5 py-4 border-b border-charcoal-100 dark:border-charcoal-800"><h3 class="font-semibold">Wallets</h3></div>
