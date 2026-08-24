@@ -82,6 +82,41 @@ class UserManagementController extends Controller
         return back()->with('status', 'user-updated');
     }
 
+    public function updateProfile(Request $request, User $user): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'state' => ['nullable', 'string', 'max:100'],
+            'country' => ['nullable', 'string', 'size:2'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
+            'kyc_status' => ['required', 'in:unverified,pending,verified,rejected'],
+        ]);
+
+        $user->update($data);
+
+        ActivityLog::record(auth()->id(), 'admin_updated_user_profile', ['user_id' => $user->id]);
+
+        return back()->with('status', 'user-profile-updated');
+    }
+
+    public function updateRole(Request $request, User $user): RedirectResponse
+    {
+        abort_unless($request->user()->hasRole('super-admin'), 403, 'Only super admins can change roles.');
+
+        $data = $request->validate([
+            'role' => ['required', 'in:user,admin,super-admin'],
+        ]);
+
+        $user->syncRoles([$data['role']]);
+
+        ActivityLog::record(auth()->id(), 'admin_changed_user_role', ['user_id' => $user->id, 'role' => $data['role']]);
+
+        return back()->with('status', 'user-role-updated');
+    }
+
     public function approveKyc(KycDocument $kycDocument): RedirectResponse
     {
         $kycDocument->update([

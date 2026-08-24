@@ -30,6 +30,8 @@ class DashboardController extends Controller
             'portfolioUsd' => $portfolioUsd,
             'recentTransactions' => $recentTransactions,
             'activeRates' => $activeRates,
+            'cryptoAssets' => CryptoAsset::query()->get(),
+            'fiatCurrencies' => FiatCurrency::query()->get(),
         ]);
     }
 

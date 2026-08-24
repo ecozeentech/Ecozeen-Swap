@@ -73,4 +73,26 @@ class DailyRateController extends Controller
 
         return back()->with('status', 'rate-updated');
     }
+
+    public function toggleActive(DailyRate $dailyRate): RedirectResponse
+    {
+        $dailyRate->update(['is_active' => ! $dailyRate->is_active]);
+
+        ActivityLog::record(auth()->id(), $dailyRate->is_active ? 'admin_activated_daily_rate' : 'admin_deactivated_daily_rate', ['rate_id' => $dailyRate->id]);
+
+        return back()->with('status', $dailyRate->is_active ? 'rate-activated' : 'rate-deactivated');
+    }
+
+    public function destroy(DailyRate $dailyRate): RedirectResponse
+    {
+        ActivityLog::record(auth()->id(), 'admin_deleted_daily_rate', [
+            'rate_id' => $dailyRate->id,
+            'crypto_asset_id' => $dailyRate->crypto_asset_id,
+            'fiat_currency_id' => $dailyRate->fiat_currency_id,
+        ]);
+
+        $dailyRate->delete();
+
+        return back()->with('status', 'rate-deleted');
+    }
 }

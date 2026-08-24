@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class SystemSetting extends Model
 {
@@ -62,5 +63,25 @@ class SystemSetting extends Model
             'json' => json_decode((string) $value, true) ?? [],
             default => $value,
         };
+    }
+
+    /**
+     * Resolve a stored upload path (e.g. a branding logo) to a public URL,
+     * falling back to a bundled default asset when nothing has been
+     * uploaded yet.
+     */
+    public static function assetUrl(string $key, string $fallbackPublicPath): string
+    {
+        $path = self::get($key);
+
+        if (! $path) {
+            return asset($fallbackPublicPath);
+        }
+
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+
+        return Storage::disk('public')->exists($path) ? Storage::disk('public')->url($path) : asset($fallbackPublicPath);
     }
 }
