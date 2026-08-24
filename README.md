@@ -103,6 +103,13 @@ lifecycle, buy/sell quoting, admin settlement, cross-asset swaps, daily KYC limi
 ./vendor/bin/pint
 ```
 
+## Deploying to Production
+
+For a step-by-step guide to deploying this app on **Hostinger Business shared hosting**
+(SSH + Git deploy, `.htaccess` routing, database-backed queue/cache/session since shared hosting
+has no Redis or persistent workers, cron jobs, SSL, and post-deploy admin setup), see
+[`docs/DEPLOYMENT-HOSTINGER.md`](docs/DEPLOYMENT-HOSTINGER.md).
+
 ## Architecture Notes
 
 - **Services layer** (`app/Services`) contains all business logic — `RateService`, `WalletService`,
