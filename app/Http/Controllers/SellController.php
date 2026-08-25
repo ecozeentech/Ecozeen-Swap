@@ -9,8 +9,10 @@ use App\Models\CryptoWallet;
 use App\Models\FiatCurrency;
 use App\Models\PaymentGateway;
 use App\Models\Transaction;
+use App\Notifications\AdminAlert;
 use App\Services\RateService;
 use App\Services\TradeService;
+use App\Support\Features;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -27,6 +29,8 @@ class SellController extends Controller
     {
         return view('trade.buy-sell', [
             'activeTab' => 'sell',
+            'buyEnabled' => Features::isEnabled(Features::BUY),
+            'sellEnabled' => Features::isEnabled(Features::SELL),
             'cryptoAssets' => $this->rates->cryptoAssets(),
             'fiatCurrencies' => $this->rates->fiatCurrencies(),
             'activeRates' => $this->rates->allActiveRates(),
@@ -74,6 +78,13 @@ class SellController extends Controller
         }
 
         ActivityLog::record($user->id, 'sell_initiated', ['reference' => $transaction->reference]);
+
+        AdminAlert::broadcast(
+            'Sell Order Awaiting Crypto',
+            "{$user->name} is sending {$request->input('crypto_amount')} {$crypto->symbol} to sell. Confirm receipt once it arrives.",
+            'warning',
+            route('admin.transactions.show', $transaction)
+        );
 
         return redirect()->route('sell.show', $transaction)->with('status', 'sell-initiated');
     }

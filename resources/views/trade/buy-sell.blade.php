@@ -1,7 +1,8 @@
 <x-app-layout>
     <x-slot name="title">Trading Engine</x-slot>
 
-    <div class="max-w-5xl mx-auto" x-data="{ tab: '{{ $activeTab }}' }">
+    @php $initialTab = $activeTab === 'buy' && ! $buyEnabled ? 'sell' : ($activeTab === 'sell' && ! $sellEnabled ? 'buy' : $activeTab); @endphp
+    <div class="max-w-5xl mx-auto" x-data="{ tab: '{{ $initialTab }}' }">
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-charcoal-900 dark:text-white">Trading Engine</h1>
             <p class="text-sm text-charcoal-500 dark:text-charcoal-400">Execute precise, institutional-grade orders instantly.</p>
@@ -10,8 +11,16 @@
         <div class="grid lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-4">
                 <div class="inline-flex rounded-xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-1 shadow-sm">
-                    <button type="button" @click="tab = 'buy'" class="px-6 py-2 rounded-lg text-sm font-semibold transition" :class="tab === 'buy' ? 'bg-brand-500 text-white shadow-sm' : 'text-charcoal-500 dark:text-charcoal-400'">Buy</button>
-                    <button type="button" @click="tab = 'sell'" class="px-6 py-2 rounded-lg text-sm font-semibold transition" :class="tab === 'sell' ? 'bg-brand-500 text-white shadow-sm' : 'text-charcoal-500 dark:text-charcoal-400'">Sell</button>
+                    @if ($buyEnabled)
+                        <button type="button" @click="tab = 'buy'" class="px-6 py-2 rounded-lg text-sm font-semibold transition" :class="tab === 'buy' ? 'bg-brand-500 text-white shadow-sm' : 'text-charcoal-500 dark:text-charcoal-400'">Buy</button>
+                    @else
+                        <span class="px-6 py-2 rounded-lg text-sm font-semibold text-charcoal-300 dark:text-charcoal-600 cursor-not-allowed" title="Buy is temporarily disabled">Buy</span>
+                    @endif
+                    @if ($sellEnabled)
+                        <button type="button" @click="tab = 'sell'" class="px-6 py-2 rounded-lg text-sm font-semibold transition" :class="tab === 'sell' ? 'bg-brand-500 text-white shadow-sm' : 'text-charcoal-500 dark:text-charcoal-400'">Sell</button>
+                    @else
+                        <span class="px-6 py-2 rounded-lg text-sm font-semibold text-charcoal-300 dark:text-charcoal-600 cursor-not-allowed" title="Sell is temporarily disabled">Sell</span>
+                    @endif
                     <a href="{{ route('swap.index') }}" class="px-6 py-2 rounded-lg text-sm font-semibold text-charcoal-500 dark:text-charcoal-400 hover:text-brand-600">Swap</a>
                 </div>
 
@@ -22,57 +31,68 @@
                     </div>
                 @endif
 
-                <div x-show="tab === 'buy'" class="space-y-4">
-                    <div class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300 flex gap-2">
-                        <svg class="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                        <span><strong>Important Payment Instruction:</strong> Do not include references to "crypto", any coin name, or "Ecozeen Swap" in your bank transfer memo/description. Use only the provided reference ID.</span>
-                    </div>
+                @if ($buyEnabled)
+                    <div x-show="tab === 'buy'" class="space-y-4">
+                        <div class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300 flex gap-2">
+                            <svg class="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            <span><strong>Important Payment Instruction:</strong> Do not include references to "crypto", any coin name, or "Ecozeen Swap" in your bank transfer memo/description. Use only the provided reference ID.</span>
+                        </div>
 
-                    <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
-                        <form method="POST" action="{{ route('buy.store') }}" class="space-y-4">
-                            @csrf
-                            <livewire:buy-calculator />
+                        <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
+                            <form method="POST" action="{{ route('buy.store') }}" class="space-y-4">
+                                @csrf
+                                <livewire:buy-calculator />
 
-                            <div>
-                                <x-input-label value="Payment Method" />
-                                <div class="mt-2 space-y-2">
-                                    @foreach ($gateways as $gateway)
-                                        <label class="flex items-center gap-3 rounded-lg border border-charcoal-200 dark:border-charcoal-700 px-4 py-3 cursor-pointer hover:border-brand-400">
-                                            <input type="radio" name="payment_method" value="{{ $gateway->slug }}" required class="text-brand-600 focus:ring-brand-500">
-                                            <span class="text-sm font-medium">{{ $gateway->name }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            </div>
-
-                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg shadow-sm">Execute Buy Order</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div x-show="tab === 'sell'" style="display:none" class="space-y-4">
-                    <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
-                        <form method="POST" action="{{ route('sell.store') }}" class="space-y-4">
-                            @csrf
-                            <livewire:sell-calculator />
-
-                            <div>
-                                <x-input-label value="Settlement Bank Account" />
-                                @if ($bankAccounts->isEmpty())
-                                    <p class="mt-1 text-sm text-amber-600">You need at least one bank account before selling. <a href="{{ route('bank-accounts.index') }}" class="underline font-semibold">Add a bank account</a>.</p>
-                                @else
-                                    <select name="bank_account_id" required class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
-                                        @foreach ($bankAccounts as $account)
-                                            <option value="{{ $account->id }}" @selected($account->is_default)>{{ $account->bank_name }} &middot; {{ $account->account_name }} ({{ $account->maskedAccountNumber() }})</option>
+                                <div>
+                                    <x-input-label value="Payment Method" />
+                                    <div class="mt-2 space-y-2">
+                                        @foreach ($gateways as $gateway)
+                                            <label class="flex items-center gap-3 rounded-lg border border-charcoal-200 dark:border-charcoal-700 px-4 py-3 cursor-pointer hover:border-brand-400">
+                                                <input type="radio" name="payment_method" value="{{ $gateway->slug }}" required class="text-brand-600 focus:ring-brand-500">
+                                                <span class="text-sm font-medium">{{ $gateway->name }}</span>
+                                            </label>
                                         @endforeach
-                                    </select>
-                                @endif
-                            </div>
+                                    </div>
+                                </div>
 
-                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg shadow-sm" @disabled($bankAccounts->isEmpty())>Execute Sell Order</button>
-                        </form>
+                                <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg shadow-sm">Execute Buy Order</button>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                @endif
+
+                @if ($sellEnabled)
+                    <div x-show="tab === 'sell'" style="display:none" class="space-y-4">
+                        <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
+                            <form method="POST" action="{{ route('sell.store') }}" class="space-y-4">
+                                @csrf
+                                <livewire:sell-calculator />
+
+                                <div>
+                                    <x-input-label value="Settlement Bank Account" />
+                                    @if ($bankAccounts->isEmpty())
+                                        <p class="mt-1 text-sm text-amber-600">You need at least one bank account before selling. <a href="{{ route('bank-accounts.index') }}" class="underline font-semibold">Add a bank account</a>.</p>
+                                    @else
+                                        <select name="bank_account_id" required class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
+                                            @foreach ($bankAccounts as $account)
+                                                <option value="{{ $account->id }}" @selected($account->is_default)>{{ $account->bank_name }} &middot; {{ $account->account_name }} ({{ $account->maskedAccountNumber() }})</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
+                                </div>
+
+                                <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg shadow-sm" @disabled($bankAccounts->isEmpty())>Execute Sell Order</button>
+                            </form>
+                        </div>
+                    </div>
+                @endif
+
+                @if (! $buyEnabled || ! $sellEnabled)
+                    <div class="rounded-2xl border border-dashed border-charcoal-200 dark:border-charcoal-700 p-6 text-center text-sm text-charcoal-400"
+                         x-show="(tab === 'buy' && {{ $buyEnabled ? 'false' : 'true' }}) || (tab === 'sell' && {{ $sellEnabled ? 'false' : 'true' }})" style="display:none">
+                        This feature is temporarily unavailable. Please check back shortly.
+                    </div>
+                @endif
             </div>
 
             <div class="space-y-6">
