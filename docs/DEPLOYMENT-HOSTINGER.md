@@ -252,17 +252,53 @@ query scope, not a scheduled job), but it's good practice to add it anyway for f
 
 ## 10. Redeploying updates later
 
+This is always **incremental** — `git pull` only brings in the new commits, it never wipes or
+recreates anything you already have. Existing files, `.env`, uploaded logos/KYC docs/gift card
+images (all in `storage/app/`), and all your data stay exactly as they are.
+
 ```bash
 ssh u123456789@your-server-ip -p 65002
 cd domains/ecozeenswap.com/public_html
 git pull origin main
 composer install --optimize-autoloader --no-dev
 php artisan migrate --force
-php artisan config:cache && php artisan route:cache && php artisan view:cache
+php artisan config:clear && php artisan config:cache
+php artisan route:clear && php artisan route:cache
+php artisan view:clear && php artisan view:cache
 ```
 
-If the update touched frontend assets, rebuild locally (`npm run build`) and re-upload
-`public/build/` as in step 4.
+`php artisan migrate --force` only ever adds new tables/columns for new features — it never drops
+existing data. If a past migration run partially failed and left a table it's trying to re-create,
+Laravel skips already-applied migrations automatically (tracked in the `migrations` table), so
+this is safe to run after every update without touching your existing rows.
+
+If the update touched frontend assets (JS/CSS/Blade — almost every update does), rebuild locally
+and re-upload `public/build/` as in step 4:
+
+```bash
+# On your local machine, inside the project
+git pull origin main
+npm install
+npm run build
+```
+
+Then upload the freshly generated `public/build/` folder over the server's existing one (it's
+safe to overwrite — the old, stale `public/build/` is exactly what you're replacing):
+
+```bash
+scp -P 65002 -r public/build u123456789@your-server-ip:domains/ecozeenswap.com/public_html/public/
+```
+
+**Don't skip this step.** A very common shared-hosting mistake is running `git pull` and the
+`artisan` commands on the server but forgetting to rebuild and re-upload `public/build/` — the
+server then keeps serving the *old* compiled JS/CSS forever, so PHP-level fixes land but anything
+that depends on the frontend bundle (Livewire interactivity, styling, new UI) silently keeps the
+old broken behavior. If something still looks unfixed after a deploy, this is the first thing to
+check.
+
+Finally, clear your **browser cache** (or just hard-refresh with Ctrl+Shift+R / Cmd+Shift+R) when
+testing — browsers aggressively cache `public/build/` assets, so a stale tab can look "not fixed"
+even after a correct deploy.
 
 ---
 
