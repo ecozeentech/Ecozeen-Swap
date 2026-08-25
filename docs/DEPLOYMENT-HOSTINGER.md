@@ -238,8 +238,15 @@ query scope, not a scheduled job), but it's good practice to add it anyway for f
 4. From the admin panel, configure:
    - `/admin/gateways` — Paystack/Flutterwave keys and bank transfer account details
    - `/admin/rates` — real daily buy/sell rates for each crypto/fiat pair
+   - `/admin/crypto-wallets` — **required before Deposit/Sell will work** — add the platform's
+     real receiving address for every active crypto asset (e.g. your BTC/ETH/USDT hot wallet).
+     Every user sees the same address(es) here; there's no per-user generated address.
+   - `/admin/branding` — replace the placeholder logo/favicon with your final artwork if desired
    - `/admin/settings` — support widget (Tawk.to URL), coming-soon message, gift card buyback %
    - `/admin/features` — disable any feature you're not ready to launch yet
+5. Tell users to add at least one bank account from **Profile → Bank Accounts** before they try
+   to sell crypto or withdraw fiat — both flows require selecting a saved bank account as the
+   settlement destination.
 
 ---
 
