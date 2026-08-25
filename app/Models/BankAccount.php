@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\ResilientEncrypted;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,7 +23,7 @@ class BankAccount extends Model
     protected function casts(): array
     {
         return [
-            'account_number' => 'encrypted',
+            'account_number' => ResilientEncrypted::class,
             'is_default' => 'boolean',
         ];
     }

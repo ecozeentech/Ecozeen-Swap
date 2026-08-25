@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\GiftCard;
 use App\Models\Transaction;
+use App\Notifications\AccountNotification;
 use App\Services\WalletService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,6 +49,13 @@ class GiftCardVerificationController extends Controller
             ]);
         });
 
+        $giftCard->user->notify(new AccountNotification(
+            'Gift Card Approved',
+            "Your {$giftCard->card_type} gift card was verified and ".number_format((float) $giftCard->selling_price, 2)." {$giftCard->payout_currency} has been credited to your wallet.",
+            'success',
+            route('giftcards.index')
+        ));
+
         ActivityLog::record(auth()->id(), 'admin_approved_giftcard', ['gift_card_id' => $giftCard->id]);
 
         return back()->with('status', 'giftcard-approved');
@@ -63,6 +71,13 @@ class GiftCardVerificationController extends Controller
             'verified_by' => auth()->id(),
             'verified_at' => now(),
         ]);
+
+        $giftCard->user->notify(new AccountNotification(
+            'Gift Card Rejected',
+            "Your {$giftCard->card_type} gift card submission was rejected. Reason: {$request->input('reason')}",
+            'danger',
+            route('giftcards.index')
+        ));
 
         ActivityLog::record(auth()->id(), 'admin_rejected_giftcard', ['gift_card_id' => $giftCard->id]);
 

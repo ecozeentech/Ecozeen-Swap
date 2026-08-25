@@ -86,7 +86,7 @@ class GiftCardProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
             'countries' => ['nullable', 'array'],
             'countries.*' => ['string', 'size:2'],
-            'logo' => ['nullable', 'image', 'max:2048'],
+            'logo' => MediaUploadService::logoRules(),
         ]);
 
         $validated['is_active'] = $request->boolean('is_active');

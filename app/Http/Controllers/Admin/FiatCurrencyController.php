@@ -29,7 +29,7 @@ class FiatCurrencyController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'symbol' => ['required', 'string', 'max:5'],
             'exchange_rate_to_usd' => ['required', 'numeric', 'min:0'],
-            'logo' => ['nullable', 'image', 'max:2048'],
+            'logo' => MediaUploadService::logoRules(),
         ]);
 
         $logoPath = $request->hasFile('logo') ? $this->media->store($request->file('logo'), 'fiat-logos') : null;
@@ -55,7 +55,7 @@ class FiatCurrencyController extends Controller
             'symbol' => ['required', 'string', 'max:5'],
             'exchange_rate_to_usd' => ['required', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'logo' => ['nullable', 'image', 'max:2048'],
+            'logo' => MediaUploadService::logoRules(),
         ]);
 
         $data = [

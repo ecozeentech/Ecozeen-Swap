@@ -69,20 +69,7 @@
                 </header>
 
                 <main class="flex-1 px-4 sm:px-6 py-6 max-w-7xl w-full mx-auto">
-                    @if (session('status'))
-                        <div class="mb-4 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-300">
-                            {{ __(str_replace('-', ' ', session('status'))) }}
-                        </div>
-                    @endif
-                    @if ($errors->any())
-                        <div class="mb-4 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
-                            <ul class="list-disc list-inside space-y-1">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
+                    @include('partials.flash-toast')
 
                     {{ $slot }}
                 </main>

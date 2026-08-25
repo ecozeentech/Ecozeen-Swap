@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Casts\ResilientEncrypted;
+use App\Casts\ResilientEncryptedArray;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -61,8 +63,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'password' => 'hashed',
-            'two_factor_secret' => 'encrypted',
-            'two_factor_recovery_codes' => 'encrypted:array',
+            'two_factor_secret' => ResilientEncrypted::class,
+            'two_factor_recovery_codes' => ResilientEncryptedArray::class,
             'two_factor_confirmed_at' => 'datetime',
             'daily_trade_limit' => 'decimal:2',
             'current_balance_usd_equivalent' => 'decimal:2',

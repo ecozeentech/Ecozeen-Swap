@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\ResilientEncryptedArray;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,7 +22,7 @@ class PaymentGateway extends Model
     {
         return [
             'is_active' => 'boolean',
-            'credentials' => 'encrypted:array',
+            'credentials' => ResilientEncryptedArray::class,
             'metadata' => 'array',
         ];
     }

@@ -11,6 +11,7 @@ use App\Models\FiatCurrency;
 use App\Models\PaymentGateway;
 use App\Models\Transaction;
 use App\Models\Wallet;
+use App\Notifications\AccountNotification;
 use App\Services\FlutterwaveService;
 use App\Services\PaystackService;
 use App\Services\WalletService;
@@ -196,6 +197,13 @@ class WalletController extends Controller
 
             $transaction->update(['status' => 'completed', 'processed_at' => now()]);
         });
+
+        $transaction->user->notify(new AccountNotification(
+            'Deposit Confirmed',
+            number_format((float) $transaction->amount, 2)." {$transaction->currency_code} has been credited to your wallet.",
+            'success',
+            route('wallet.index')
+        ));
     }
 
     public function depositAddress(Request $request, CryptoAsset $cryptoAsset): View
