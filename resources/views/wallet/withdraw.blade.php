@@ -42,9 +42,23 @@
                 <x-input-error :messages="$errors->get('amount')" class="mt-2" />
             </div>
 
-            <div>
-                <x-input-label for="destination" value="Destination (bank account or wallet address)" />
-                <x-text-input id="destination" name="destination" type="text" required class="mt-1 w-full" placeholder="Account number / crypto address" />
+            <div x-show="type === 'fiat'">
+                <x-input-label value="Settlement Bank Account" />
+                @if ($bankAccounts->isEmpty())
+                    <p class="mt-1 text-sm text-amber-600">You have no bank accounts yet. <a href="{{ route('bank-accounts.index') }}" class="underline font-semibold">Add one first</a>.</p>
+                @else
+                    <select name="bank_account_id" class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
+                        @foreach ($bankAccounts as $account)
+                            <option value="{{ $account->id }}" @selected($account->is_default)>{{ $account->bank_name }} &middot; {{ $account->account_name }} ({{ $account->maskedAccountNumber() }})</option>
+                        @endforeach
+                    </select>
+                @endif
+                <x-input-error :messages="$errors->get('bank_account_id')" class="mt-2" />
+            </div>
+
+            <div x-show="type === 'crypto'" style="display:none">
+                <x-input-label for="destination" value="Destination Wallet Address" />
+                <x-text-input id="destination" name="destination" type="text" class="mt-1 w-full" placeholder="External crypto wallet address" />
                 <x-input-error :messages="$errors->get('destination')" class="mt-2" />
             </div>
 
