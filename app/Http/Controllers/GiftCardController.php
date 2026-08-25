@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\GiftCard;
 use App\Models\GiftCardProduct;
 use App\Models\SystemSetting;
+use App\Notifications\AdminAlert;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -68,6 +69,13 @@ class GiftCardController extends Controller
         ]);
 
         ActivityLog::record($user->id, 'giftcard_submitted', ['card_type' => $giftCard->card_type]);
+
+        AdminAlert::broadcast(
+            'Gift Card Submitted',
+            "{$user->name} (@{$user->username}) submitted a {$giftCard->card_type} gift card worth ".number_format((float) $giftCard->face_value, 2)." {$giftCard->face_value_currency}.",
+            'info',
+            route('admin.giftcards.index')
+        );
 
         return redirect()->route('giftcards.index')->with('status', 'giftcard-submitted');
     }

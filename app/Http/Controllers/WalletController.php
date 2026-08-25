@@ -12,6 +12,7 @@ use App\Models\PaymentGateway;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use App\Notifications\AccountNotification;
+use App\Notifications\AdminAlert;
 use App\Services\FlutterwaveService;
 use App\Services\PaystackService;
 use App\Services\WalletService;
@@ -153,6 +154,13 @@ class WalletController extends Controller
 
         ActivityLog::record($request->user()->id, 'deposit_proof_uploaded', ['transaction' => $transaction->reference]);
 
+        AdminAlert::broadcast(
+            'Bank Transfer Proof Uploaded',
+            "{$request->user()->name} uploaded payment proof for {$transaction->reference}. Verify and mark it paid.",
+            'warning',
+            route('admin.transactions.show', $transaction)
+        );
+
         return redirect()->route('wallet.index')->with('status', 'proof-uploaded');
     }
 
@@ -274,6 +282,13 @@ class WalletController extends Controller
         });
 
         ActivityLog::record($user->id, 'withdrawal_requested', ['amount' => $request->input('amount'), 'currency' => $request->input('currency_code')]);
+
+        AdminAlert::broadcast(
+            'Withdrawal Requested',
+            "{$user->name} requested a withdrawal of ".number_format((float) $request->input('amount'), 4)." {$request->input('currency_code')}.",
+            'warning',
+            route('admin.transactions.index', ['type' => 'withdrawal', 'status' => 'pending'])
+        );
 
         return redirect()->route('wallet.index')->with('status', 'withdrawal-requested');
     }
