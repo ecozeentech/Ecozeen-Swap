@@ -32,9 +32,12 @@ class BrandingController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->validate([
-            'site_logo' => ['nullable', 'image', 'max:2048'],
-            'site_logo_dark' => ['nullable', 'image', 'max:2048'],
-            'site_favicon' => ['nullable', 'image', 'max:1024'],
+            'site_logo' => MediaUploadService::logoRules(2048),
+            'site_logo_dark' => MediaUploadService::logoRules(2048),
+            'site_favicon' => MediaUploadService::logoRules(1024),
+            // The Open Graph share image is rendered by social platforms'
+            // own crawlers (never our own <img> tags), so SVG isn't safe
+            // to allow here — keep it to the strict raster 'image' rule.
             'site_og_image' => ['nullable', 'image', 'max:4096'],
         ]);
 
