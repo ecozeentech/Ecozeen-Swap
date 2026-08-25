@@ -17,6 +17,7 @@ $sectionLabel = fn ($label) => "<p class=\"px-3 pt-4 pb-1 text-[11px] font-semib
 {!! $adminLink('admin.crypto.index', 'Crypto Assets', '<path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 8v2m9-4a9 9 0 11-18 0 9 9 0 0118 0z" />') !!}
 {!! $adminLink('admin.fiat.index', 'Fiat Currencies', '<path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 8v2m9-4a9 9 0 11-18 0 9 9 0 0118 0z" />') !!}
 {!! $adminLink('admin.rates.index', 'Daily Rates', '<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />') !!}
+{!! $adminLink('admin.crypto-wallets.index', 'Crypto Wallets', '<path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M4 10h16M4 10V6l8-4 8 4v4M6 10v11M10 10v11M14 10v11M18 10v11" />') !!}
 {!! $adminLink('admin.transactions.index', 'Transactions', '<path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z" />') !!}
 
 {!! $sectionLabel('Gift Cards') !!}

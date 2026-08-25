@@ -24,13 +24,15 @@ class BuyController extends Controller
         protected PaystackService $paystack,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        return view('trade.buy', [
+        return view('trade.buy-sell', [
+            'activeTab' => 'buy',
             'cryptoAssets' => $this->rates->cryptoAssets(),
             'fiatCurrencies' => $this->rates->fiatCurrencies(),
             'activeRates' => $this->rates->allActiveRates(),
             'gateways' => PaymentGateway::query()->active()->get(),
+            'bankAccounts' => $request->user()->bankAccounts()->active()->get(),
         ]);
     }
 

@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             SystemSettingSeeder::class,
             AdminUserSeeder::class,
             DailyRateSeeder::class,
+            CryptoWalletSeeder::class,
             GiftCardProductSeeder::class,
             PageSeeder::class,
             BlogSeeder::class,
