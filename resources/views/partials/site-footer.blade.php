@@ -1,7 +1,7 @@
 <footer class="border-t border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-950">
     <div class="max-w-6xl mx-auto px-6 py-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
         <div class="col-span-2 sm:col-span-1">
-            <x-application-logo :with-text="true" />
+            <x-application-logo class="h-10 w-10" />
             <p class="mt-3 text-sm text-charcoal-500 dark:text-charcoal-400">The single trusted vendor for buying, selling, and swapping crypto.</p>
         </div>
         <div>
@@ -16,7 +16,7 @@
             <p class="text-xs font-semibold uppercase tracking-wide text-charcoal-400 mb-3">Legal</p>
             <ul class="space-y-2 text-sm text-charcoal-500 dark:text-charcoal-400">
                 <li><a href="{{ route('policy.privacy') }}" class="hover:text-brand-600">Privacy Policy</a></li>
-                <li><a href="{{ route('policy.terms') }}" class="hover:text-brand-600">Terms of Service</a></li>
+                <li><a href="{{ route('policy.terms') }}" class="hover:text-brand-600">Terms &amp; Conditions</a></li>
             </ul>
         </div>
         <div>

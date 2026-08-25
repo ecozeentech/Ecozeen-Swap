@@ -107,9 +107,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(UserTrustedIp::class);
     }
 
-    public function cryptoWalletAddresses(): HasMany
+    public function bankAccounts(): HasMany
     {
-        return $this->hasMany(CryptoWalletAddress::class);
+        return $this->hasMany(BankAccount::class);
     }
 
     public function hasTwoFactorEnabled(): bool
@@ -120,6 +120,29 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isKycVerified(): bool
     {
         return $this->kyc_status === 'verified';
+    }
+
+    /**
+     * Human-friendly KYC label. The stored value stays 'unverified' for
+     * backwards compatibility, but KYC is entirely optional — it only
+     * affects trading limits and is never required to use the platform.
+     */
+    public function kycLabel(): string
+    {
+        return self::kycStatusOptions()[$this->kyc_status] ?? ucfirst($this->kyc_status);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function kycStatusOptions(): array
+    {
+        return [
+            'unverified' => 'Not Submitted',
+            'pending' => 'Pending Review',
+            'verified' => 'Verified',
+            'rejected' => 'Rejected',
+        ];
     }
 
     public function walletFor(string $currencyType, string $currencyCode): ?Wallet

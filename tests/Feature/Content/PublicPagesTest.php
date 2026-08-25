@@ -13,7 +13,7 @@ class PublicPagesTest extends TestCase
 
     public function test_about_us_page_renders_published_content(): void
     {
-        Page::create(['slug' => 'about-us', 'title' => 'About Ecozeen Swap', 'content' => '<p>We are Ecozeen.</p>', 'is_published' => true]);
+        Page::create(['slug' => 'about', 'title' => 'About Ecozeen Swap', 'content' => '<p>We are Ecozeen.</p>', 'is_published' => true]);
 
         $response = $this->get(route('about.show'));
 
@@ -23,7 +23,7 @@ class PublicPagesTest extends TestCase
 
     public function test_unpublished_page_returns_404(): void
     {
-        Page::create(['slug' => 'about-us', 'title' => 'About', 'content' => 'x', 'is_published' => false]);
+        Page::create(['slug' => 'about', 'title' => 'About', 'content' => 'x', 'is_published' => false]);
 
         $this->get(route('about.show'))->assertNotFound();
     }

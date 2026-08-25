@@ -121,7 +121,7 @@ class TradeService
         ];
     }
 
-    public function initiateSell(User $user, CryptoAsset $crypto, FiatCurrency $fiat, float $cryptoAmount, string $depositAddress): Transaction
+    public function initiateSell(User $user, CryptoAsset $crypto, FiatCurrency $fiat, float $cryptoAmount, string $depositAddress, array $extraMetadata = []): Transaction
     {
         $quote = $this->quoteSell($crypto, $fiat, $cryptoAmount);
         $usdEquivalent = $this->toUsd((float) $quote['fiat_amount'], $fiat);
@@ -138,14 +138,14 @@ class TradeService
             'currency_code' => $fiat->code,
             'status' => 'pending',
             'reference' => Transaction::generateReference('SELL'),
-            'metadata' => [
+            'metadata' => array_merge([
                 'crypto_amount' => $cryptoAmount,
                 'crypto_symbol' => $crypto->symbol,
                 'rate_id' => $quote['rate']->id,
                 'rate_used' => (string) $quote['rate']->buy_rate,
                 'deposit_address' => $depositAddress,
                 'usd_equivalent' => $usdEquivalent,
-            ],
+            ], $extraMetadata),
         ]);
     }
 

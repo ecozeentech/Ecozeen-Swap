@@ -53,7 +53,7 @@ class PageController extends Controller
 
     public function destroy(Page $page): RedirectResponse
     {
-        if (in_array($page->slug, ['about-us', 'contact-us', 'privacy-policy', 'terms-of-service'], true)) {
+        if (in_array($page->slug, ['about', 'contact', 'privacy-policy', 'terms-and-conditions'], true)) {
             return back()->withErrors(['page' => 'Core pages cannot be deleted, only edited.']);
         }
 

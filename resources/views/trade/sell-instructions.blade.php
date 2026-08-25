@@ -15,10 +15,24 @@
             {{ $transaction->metadata['deposit_address'] }}
         </div>
 
+        @if (! empty($transaction->metadata['memo_tag']))
+            <div class="mt-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 p-3 text-sm">
+                <span class="text-charcoal-400">Memo/Tag (required):</span>
+                <span class="font-mono font-semibold ml-1">{{ $transaction->metadata['memo_tag'] }}</span>
+            </div>
+        @endif
+
         <div class="mt-4 rounded-lg bg-charcoal-50 dark:bg-charcoal-800 p-3 text-sm flex justify-between">
             <span class="text-charcoal-400">Reference</span>
             <span class="font-mono font-semibold">{{ $transaction->reference }}</span>
         </div>
+
+        @if (! empty($transaction->metadata['settlement_bank_name']))
+            <div class="mt-4 rounded-lg bg-brand-50 dark:bg-charcoal-800 p-3 text-sm text-left">
+                <p class="text-charcoal-400 text-xs mb-1">Payout will be sent to</p>
+                <p class="font-semibold">{{ $transaction->metadata['settlement_bank_name'] }} &middot; {{ $transaction->metadata['settlement_account_name'] }}</p>
+            </div>
+        @endif
 
         <div class="mt-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-4 py-2 text-xs text-amber-700 dark:text-amber-300">
             Status: <span class="font-semibold capitalize">{{ $transaction->status }}</span> &mdash; awaiting confirmation

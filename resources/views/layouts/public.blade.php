@@ -3,16 +3,16 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#2D6A4F">
+        <meta name="theme-color" content="#2563EB">
         <title>{{ $title ?? config('app.name') }} — {{ config('app.name') }}</title>
 
         <x-seo-meta :title="($title ?? config('app.name')).' — '.config('app.name')" :description="$description ?? null" :image="$image ?? null" />
 
         <link rel="manifest" href="{{ asset('manifest.json') }}">
-        <link rel="icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'images/icons/icon-192.png') }}">
+        <link rel="icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'favicon.ico') }}">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -21,7 +21,7 @@
     <body class="font-sans antialiased bg-white dark:bg-charcoal-950 text-charcoal-900 dark:text-white">
         <header class="sticky top-0 z-40 border-b border-charcoal-100 dark:border-charcoal-800 bg-white/80 dark:bg-charcoal-950/80 backdrop-blur">
             <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-                <a href="{{ route('home') }}"><x-application-logo :with-text="true" /></a>
+                <a href="{{ route('home') }}"><x-application-logo class="h-9 w-9" /></a>
                 <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-charcoal-600 dark:text-charcoal-300">
                     <a href="{{ route('buy.index') }}" class="hover:text-brand-600">Buy</a>
                     <a href="{{ route('sell.index') }}" class="hover:text-brand-600">Sell</a>
@@ -50,5 +50,6 @@
         </main>
 
         @include('partials.site-footer')
+        @include('partials.support-widget')
     </body>
 </html>

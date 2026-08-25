@@ -13,7 +13,7 @@
 
             <div>
                 <x-input-label value="URL Slug" />
-                <x-text-input name="slug" value="{{ old('slug', $page->slug) }}" :disabled="in_array($page->slug, ['about-us', 'contact-us', 'privacy-policy', 'terms-of-service'])" class="mt-1 w-full" />
+                <x-text-input name="slug" value="{{ old('slug', $page->slug) }}" :disabled="in_array($page->slug, ['about', 'contact', 'privacy-policy', 'terms-and-conditions'])" class="mt-1 w-full" />
                 <p class="text-xs text-charcoal-400 mt-1">Page will be available at /{{ $page->slug ?: 'your-slug' }}</p>
             </div>
 

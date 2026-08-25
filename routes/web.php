@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\Admin\BrandingController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\CryptoAssetController;
+use App\Http\Controllers\Admin\CryptoWalletController as AdminCryptoWalletController;
 use App\Http\Controllers\Admin\DailyRateController;
 use App\Http\Controllers\Admin\FeatureToggleController;
 use App\Http\Controllers\Admin\FiatCurrencyController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BuyController;
 use App\Http\Controllers\ContactController;
@@ -51,11 +53,11 @@ Route::get('/', function (RateService $rates) {
 | Public Content: About, Contact, Policies, Blog, Sitemap
 |--------------------------------------------------------------------------
 */
-Route::get('/about-us', [PageController::class, 'about'])->name('about.show');
-Route::get('/contact-us', [ContactController::class, 'show'])->name('contact.show');
-Route::post('/contact-us', [ContactController::class, 'store'])->middleware('throttle:6,1')->name('contact.store');
+Route::get('/about', [PageController::class, 'about'])->name('about.show');
+Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
+Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:6,1')->name('contact.store');
 Route::get('/privacy-policy', fn () => app(PageController::class)->show('privacy-policy'))->name('policy.privacy');
-Route::get('/terms-of-service', fn () => app(PageController::class)->show('terms-of-service'))->name('policy.terms');
+Route::get('/terms-and-conditions', fn () => app(PageController::class)->show('terms-and-conditions'))->name('policy.terms');
 
 Route::prefix('blog')->name('blog.')->group(function () {
     Route::get('/', [BlogController::class, 'index'])->name('index');
@@ -101,6 +103,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/activity', [ActivityLogController::class, 'show'])->name('activity');
 
         Route::match(['get', 'post'], '/verify-ip/{trustedIp}', [IpVerificationController::class, 'verify'])->name('verify-ip');
+    });
+
+    // Profile > Bank Accounts (settlement accounts for sells/withdrawals)
+    Route::prefix('profile/bank-accounts')->name('bank-accounts.')->group(function () {
+        Route::get('/', [BankAccountController::class, 'index'])->name('index');
+        Route::post('/', [BankAccountController::class, 'store'])->name('store');
+        Route::put('/{bankAccount}', [BankAccountController::class, 'update'])->name('update');
+        Route::post('/{bankAccount}/default', [BankAccountController::class, 'setDefault'])->name('set-default');
+        Route::delete('/{bankAccount}', [BankAccountController::class, 'destroy'])->name('destroy');
     });
 
     // Wallet
@@ -238,6 +249,13 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         Route::put('/categories/{blogCategory}', [AdminBlogCategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{blogCategory}', [AdminBlogCategoryController::class, 'destroy'])->name('categories.destroy');
     });
+
+    Route::get('/crypto-wallets', [AdminCryptoWalletController::class, 'index'])->name('crypto-wallets.index');
+    Route::post('/crypto-wallets', [AdminCryptoWalletController::class, 'store'])->name('crypto-wallets.store');
+    Route::put('/crypto-wallets/{cryptoWallet}', [AdminCryptoWalletController::class, 'update'])->name('crypto-wallets.update');
+    Route::post('/crypto-wallets/{cryptoWallet}/toggle', [AdminCryptoWalletController::class, 'toggleActive'])->name('crypto-wallets.toggle');
+    Route::post('/crypto-wallets/{cryptoWallet}/default', [AdminCryptoWalletController::class, 'setDefault'])->name('crypto-wallets.set-default');
+    Route::delete('/crypto-wallets/{cryptoWallet}', [AdminCryptoWalletController::class, 'destroy'])->name('crypto-wallets.destroy');
 
     Route::get('/contact-messages', [AdminContactMessageController::class, 'index'])->name('contact-messages.index');
     Route::get('/contact-messages/{contactMessage}', [AdminContactMessageController::class, 'show'])->name('contact-messages.show');

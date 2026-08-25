@@ -14,34 +14,34 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 brand: {
-                    50: '#eaf5ef',
-                    100: '#cfe8da',
-                    200: '#a1d1b7',
-                    300: '#72b992',
-                    400: '#4a9c73',
-                    500: '#2d6a4f', // primary brand green
-                    600: '#255a42',
-                    700: '#1e4a37',
-                    800: '#173a2b',
-                    900: '#102a1f',
-                    950: '#081b14',
+                    50: '#eff6ff',
+                    100: '#dbeafe',
+                    200: '#bfdbfe',
+                    300: '#93c5fd',
+                    400: '#3b82f6', // accent blue
+                    500: '#2563eb', // primary blue
+                    600: '#1d4ed8', // primary blue (hover/darker)
+                    700: '#1e40af',
+                    800: '#1e3a8a',
+                    900: '#172554',
+                    950: '#0f172a',
                 },
                 charcoal: {
-                    50: '#f4f5f6',
-                    100: '#e5e7ea',
-                    200: '#c6cad1',
-                    300: '#a1a8b3',
-                    400: '#71798a',
-                    500: '#4c5566',
-                    600: '#39404e',
-                    700: '#2a2f3a',
-                    800: '#1c1f27',
-                    900: '#121419',
-                    950: '#0a0b0e',
+                    50: '#f8fafc',
+                    100: '#f1f5f9',
+                    200: '#e2e8f0',
+                    300: '#cbd5e1',
+                    400: '#94a3b8',
+                    500: '#64748b',
+                    600: '#475569',
+                    700: '#334155',
+                    800: '#1e293b',
+                    900: '#0f172a',
+                    950: '#020617',
                 },
             },
         },

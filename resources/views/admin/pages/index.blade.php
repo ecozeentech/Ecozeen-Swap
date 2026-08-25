@@ -16,7 +16,7 @@
                 <div class="flex items-center gap-3">
                     <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ $page->is_published ? 'bg-green-100 text-green-700' : 'bg-charcoal-100 text-charcoal-600' }}">{{ $page->is_published ? 'Published' : 'Draft' }}</span>
                     <a href="{{ route('admin.pages.edit', $page) }}" class="text-sm font-semibold text-brand-600 hover:underline">Edit</a>
-                    @unless (in_array($page->slug, ['about-us', 'contact-us', 'privacy-policy', 'terms-of-service']))
+                    @unless (in_array($page->slug, ['about', 'contact', 'privacy-policy', 'terms-and-conditions']))
                         <form method="POST" action="{{ route('admin.pages.destroy', $page) }}" onsubmit="return confirm('Delete this page?')">
                             @csrf @method('DELETE')
                             <button type="submit" class="text-sm font-semibold text-red-600 hover:underline">Delete</button>

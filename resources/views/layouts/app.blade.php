@@ -4,16 +4,16 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="theme-color" content="#2D6A4F">
+        <meta name="theme-color" content="#2563EB">
 
         <title>{{ config('app.name', 'Ecozeen Swap') }} — {{ $title ?? 'Dashboard' }}</title>
 
         <link rel="manifest" href="{{ asset('manifest.json') }}">
-        <link rel="icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'images/icons/icon-192.png') }}">
+        <link rel="icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'favicon.ico') }}">
         <link rel="apple-touch-icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'images/icons/icon-192.png') }}">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
@@ -23,7 +23,7 @@
             <!-- Desktop Sidebar -->
             <aside class="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 border-r border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900">
                 <div class="h-16 flex items-center px-6 border-b border-charcoal-100 dark:border-charcoal-800">
-                    <a href="{{ route('dashboard') }}"><x-application-logo :with-text="true" /></a>
+                    <a href="{{ route('dashboard') }}"><x-application-logo class="h-9 w-9" /></a>
                 </div>
                 <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
                     @include('partials.nav-items')
@@ -43,7 +43,7 @@
             <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-black/50 lg:hidden" @click="sidebarOpen = false" style="display:none"></div>
             <aside x-show="sidebarOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-charcoal-900 shadow-xl lg:hidden" style="display:none">
                 <div class="h-16 flex items-center justify-between px-6 border-b border-charcoal-100 dark:border-charcoal-800">
-                    <x-application-logo :with-text="true" />
+                    <x-application-logo class="h-9 w-9" />
                     <button @click="sidebarOpen = false" class="text-charcoal-400"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
                 </div>
                 <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" @click="sidebarOpen = false">
@@ -100,7 +100,7 @@
                 @if (auth()->user()->kyc_status !== 'verified')
                     <div class="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 px-4 sm:px-6 py-2.5 text-sm text-amber-800 dark:text-amber-300 flex items-center gap-2">
                         <svg class="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                        <span>KYC pending &mdash; trading limits apply. <a href="{{ route('security.kyc') }}" class="font-semibold underline">Complete verification</a> to increase your limits.</span>
+                        <span>Complete KYC to increase your limits. You can keep using all features (buy, sell, swap, gift cards, deposits, withdrawals) in the meantime. <a href="{{ route('security.kyc') }}" class="font-semibold underline">Upload documents</a></span>
                     </div>
                 @endif
 

@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\BankAccount;
 use App\Models\CryptoAsset;
+use App\Models\CryptoWallet;
 use App\Models\DepositProof;
 use App\Models\FiatCurrency;
 use App\Models\PaymentGateway;
 use App\Models\Transaction;
 use App\Models\Wallet;
-use App\Services\CryptoAddressService;
 use App\Services\FlutterwaveService;
 use App\Services\PaystackService;
 use App\Services\WalletService;
@@ -24,7 +25,6 @@ class WalletController extends Controller
 {
     public function __construct(
         protected WalletService $wallets,
-        protected CryptoAddressService $addresses,
         protected PaystackService $paystack,
         protected FlutterwaveService $flutterwave,
     ) {}
@@ -200,9 +200,13 @@ class WalletController extends Controller
 
     public function depositAddress(Request $request, CryptoAsset $cryptoAsset): View
     {
-        $address = $this->addresses->addressFor($request->user(), $cryptoAsset);
+        $wallets = CryptoWallet::query()
+            ->where('crypto_asset_id', $cryptoAsset->id)
+            ->active()
+            ->orderByDesc('is_default')
+            ->get();
 
-        return view('wallet.deposit-crypto', ['asset' => $cryptoAsset, 'address' => $address]);
+        return view('wallet.deposit-crypto', ['asset' => $cryptoAsset, 'platformWallets' => $wallets]);
     }
 
     public function withdrawForm(Request $request): View
@@ -211,6 +215,7 @@ class WalletController extends Controller
             'fiatCurrencies' => FiatCurrency::query()->active()->get(),
             'cryptoAssets' => CryptoAsset::query()->active()->get(),
             'wallets' => $request->user()->wallets()->get(),
+            'bankAccounts' => $request->user()->bankAccounts()->active()->get(),
         ]);
     }
 
@@ -220,7 +225,8 @@ class WalletController extends Controller
             'currency_type' => ['required', 'in:fiat,crypto'],
             'currency_code' => ['required', 'string'],
             'amount' => ['required', 'numeric', 'min:0.00000001'],
-            'destination' => ['required', 'string', 'max:255'],
+            'bank_account_id' => ['required_if:currency_type,fiat', 'nullable', 'exists:bank_accounts,id'],
+            'destination' => ['required_if:currency_type,crypto', 'nullable', 'string', 'max:255'],
         ]);
 
         $user = $request->user();
@@ -230,7 +236,19 @@ class WalletController extends Controller
             return back()->withErrors(['amount' => 'Insufficient available balance for this withdrawal.']);
         }
 
-        DB::transaction(function () use ($wallet, $request, $user) {
+        $destinationMeta = ['destination' => $request->input('destination')];
+
+        if ($request->input('currency_type') === 'fiat') {
+            $bankAccount = BankAccount::query()->where('user_id', $user->id)->findOrFail($request->input('bank_account_id'));
+            $destinationMeta = [
+                'bank_account_id' => $bankAccount->id,
+                'bank_name' => $bankAccount->bank_name,
+                'account_name' => $bankAccount->account_name,
+                'account_number_last4' => substr((string) $bankAccount->account_number, -4),
+            ];
+        }
+
+        DB::transaction(function () use ($wallet, $request, $user, $destinationMeta) {
             $locked = Wallet::query()->lockForUpdate()->find($wallet->id);
             $locked->reserved_balance = bcadd((string) $locked->reserved_balance, (string) $request->input('amount'), 8);
             $locked->save();
@@ -243,7 +261,7 @@ class WalletController extends Controller
                 'currency_code' => $locked->currency_code,
                 'status' => 'pending',
                 'reference' => Transaction::generateReference('WD'),
-                'metadata' => ['destination' => $request->input('destination')],
+                'metadata' => $destinationMeta,
             ]);
         });
 

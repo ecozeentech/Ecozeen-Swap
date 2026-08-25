@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\CryptoAsset;
-use App\Models\CryptoWalletAddress;
 use App\Models\DailyRate;
 use App\Models\Transaction;
 use App\Models\Wallet;
@@ -89,8 +88,7 @@ class CryptoAssetController extends Controller
     {
         $inUse = Wallet::query()->where('currency_code', $cryptoAsset->symbol)->where('balance', '>', 0)->exists()
             || Transaction::query()->where('currency_code', $cryptoAsset->symbol)->exists()
-            || DailyRate::query()->where('crypto_asset_id', $cryptoAsset->id)->exists()
-            || CryptoWalletAddress::query()->where('crypto_asset_id', $cryptoAsset->id)->exists();
+            || DailyRate::query()->where('crypto_asset_id', $cryptoAsset->id)->exists();
 
         if ($inUse) {
             return back()->withErrors(['crypto' => "{$cryptoAsset->symbol} has existing wallets, transactions, or rate history and can't be deleted. Deactivate it instead."]);

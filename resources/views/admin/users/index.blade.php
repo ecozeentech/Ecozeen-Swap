@@ -5,8 +5,8 @@
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, username, email" class="rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500 flex-1 min-w-[200px]">
         <select name="kyc_status" class="rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
             <option value="">All KYC Statuses</option>
-            @foreach (['unverified', 'pending', 'verified', 'rejected'] as $status)
-                <option value="{{ $status }}" @selected(request('kyc_status') === $status)>{{ ucfirst($status) }}</option>
+            @foreach (\App\Models\User::kycStatusOptions() as $status => $label)
+                <option value="{{ $status }}" @selected(request('kyc_status') === $status)>{{ $label }}</option>
             @endforeach
         </select>
         <x-secondary-button type="submit">Filter</x-secondary-button>
@@ -31,7 +31,7 @@
                             <p class="font-semibold">{{ $user->name }}</p>
                             <p class="text-xs text-charcoal-400">{{ $user->username }} &middot; {{ $user->email }}</p>
                         </td>
-                        <td class="px-5 py-3 capitalize">{{ $user->kyc_status }}</td>
+                        <td class="px-5 py-3">{{ $user->kycLabel() }}</td>
                         <td class="px-5 py-3">${{ number_format($user->daily_trade_limit, 2) }}</td>
                         <td class="px-5 py-3">
                             @if ($user->is_suspended)

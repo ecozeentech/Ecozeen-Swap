@@ -11,7 +11,14 @@
         @method('PUT')
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             @foreach ($assetKeys as $key => $label)
-                @php $current = $settings->get($key)?->value; @endphp
+                @php
+                    $current = $settings->get($key)?->value;
+                    $fallback = match ($key) {
+                        'site_logo', 'site_logo_dark' => 'images/logo.png',
+                        'site_favicon' => 'favicon.ico',
+                        default => 'images/icons/icon-512.png',
+                    };
+                @endphp
                 <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
                     <h3 class="font-semibold mb-1">{{ $label }}</h3>
                     <p class="text-xs text-charcoal-400 mb-4">
@@ -22,7 +29,7 @@
                     </p>
 
                     <div class="h-24 w-24 rounded-xl bg-charcoal-50 dark:bg-charcoal-800 flex items-center justify-center overflow-hidden mb-4">
-                        <img src="{{ \App\Models\SystemSetting::assetUrl($key, 'images/icons/icon-192.png') }}" alt="{{ $label }}" class="max-h-full max-w-full object-contain">
+                        <img src="{{ \App\Models\SystemSetting::assetUrl($key, $fallback) }}" alt="{{ $label }}" class="max-h-full max-w-full object-contain">
                     </div>
 
                     <input type="file" name="{{ $key }}" accept="image/*" class="w-full text-sm mb-3">
