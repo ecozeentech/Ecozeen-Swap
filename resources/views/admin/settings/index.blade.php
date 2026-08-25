@@ -17,6 +17,16 @@
             </div>
 
             <div>
+                <x-input-label value="Default Display Currency" />
+                <p class="text-xs text-charcoal-400 mb-1">Used on the user dashboard for anyone who hasn't picked their own preferred currency yet.</p>
+                <select name="default_display_currency" class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
+                    @foreach ($fiatCurrencies as $fiat)
+                        <option value="{{ $fiat->code }}" @selected(($settings->get('default_display_currency')?->value ?: 'USD') === $fiat->code)>{{ $fiat->name }} ({{ $fiat->code }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
                 <x-input-label value="Gift Card Buyback Rate (% of face value)" />
                 <x-text-input name="giftcard_buyback_rate" type="number" min="0" max="100" value="{{ $settings->get('giftcard_buyback_rate')?->value ?? 75 }}" class="mt-1 w-full" />
             </div>
