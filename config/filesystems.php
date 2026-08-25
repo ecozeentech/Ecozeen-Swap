@@ -33,7 +33,10 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // KYC documents, deposit proofs, and gift card screenshots live
+            // here and must never be reachable via a plain public URL, so
+            // this stays disabled (unlike the 'public' disk below).
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],
@@ -43,6 +46,15 @@ return [
             'root' => storage_path('app/public'),
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
+            // Lets Laravel serve /storage/{path} directly through PHP
+            // whenever the public/storage symlink is missing or broken —
+            // a common shared-hosting gotcha (the symlink doesn't survive
+            // some zip/upload deploy workflows, or storage:link simply
+            // never got run). When the symlink *is* present and working,
+            // the webserver still serves the static file directly and
+            // never reaches PHP, so this adds resilience with no
+            // performance cost in the common case.
+            'serve' => true,
             'throw' => false,
             'report' => false,
         ],

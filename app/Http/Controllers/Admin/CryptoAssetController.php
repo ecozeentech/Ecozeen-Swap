@@ -30,7 +30,7 @@ class CryptoAssetController extends Controller
             'symbol' => ['required', 'string', 'max:15', 'unique:crypto_assets,symbol'],
             'network' => ['nullable', 'string', 'max:100'],
             'decimal_places' => ['required', 'integer', 'min:0', 'max:18'],
-            'logo' => ['nullable', 'image', 'max:2048'],
+            'logo' => MediaUploadService::logoRules(),
         ]);
 
         $logoPath = $request->hasFile('logo') ? $this->media->store($request->file('logo'), 'crypto-logos') : null;
@@ -57,7 +57,7 @@ class CryptoAssetController extends Controller
             'network' => ['nullable', 'string', 'max:100'],
             'decimal_places' => ['required', 'integer', 'min:0', 'max:18'],
             'is_active' => ['nullable', 'boolean'],
-            'logo' => ['nullable', 'image', 'max:2048'],
+            'logo' => MediaUploadService::logoRules(),
         ]);
 
         $data = $request->only(['name', 'network', 'decimal_places']);
