@@ -25,12 +25,24 @@ class CryptoAssetController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Normalize before validating so the uniqueness check compares like
+        // for like (the column is always stored upper-cased).
+        $request->merge(['symbol' => strtoupper((string) $request->input('symbol'))]);
+
         $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'symbol' => ['required', 'string', 'max:15', 'unique:crypto_assets,symbol'],
+            // The same symbol (e.g. USDT) is allowed more than once as long
+            // as the network differs — that's how the same coin is added
+            // for ERC20, TRC20, BEP20, etc. as distinct platform assets.
+            'symbol' => [
+                'required', 'string', 'max:15',
+                Rule::unique('crypto_assets', 'symbol')->where('network', $request->input('network') ?: null),
+            ],
             'network' => ['nullable', 'string', 'max:100'],
             'decimal_places' => ['required', 'integer', 'min:0', 'max:18'],
             'logo' => MediaUploadService::logoRules(),
+        ], [
+            'symbol.unique' => 'This symbol already exists on that network. Use a different network (e.g. ERC20, TRC20, BEP20) to add the same coin again.',
         ]);
 
         $logoPath = $request->hasFile('logo') ? $this->media->store($request->file('logo'), 'crypto-logos') : null;
@@ -51,13 +63,22 @@ class CryptoAssetController extends Controller
 
     public function update(Request $request, CryptoAsset $cryptoAsset): RedirectResponse
     {
+        $request->merge(['symbol' => strtoupper((string) $request->input('symbol'))]);
+
         $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'symbol' => ['required', 'string', 'max:15', Rule::unique('crypto_assets', 'symbol')->ignore($cryptoAsset->id)],
+            'symbol' => [
+                'required', 'string', 'max:15',
+                Rule::unique('crypto_assets', 'symbol')
+                    ->where('network', $request->input('network') ?: null)
+                    ->ignore($cryptoAsset->id),
+            ],
             'network' => ['nullable', 'string', 'max:100'],
             'decimal_places' => ['required', 'integer', 'min:0', 'max:18'],
             'is_active' => ['nullable', 'boolean'],
             'logo' => MediaUploadService::logoRules(),
+        ], [
+            'symbol.unique' => 'This symbol already exists on that network. Use a different network (e.g. ERC20, TRC20, BEP20) to add the same coin again.',
         ]);
 
         $data = $request->only(['name', 'network', 'decimal_places']);
