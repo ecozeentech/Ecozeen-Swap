@@ -85,8 +85,8 @@
                     <div>
                         <x-input-label value="KYC Status" />
                         <select name="kyc_status" class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white">
-                            @foreach (['unverified', 'pending', 'verified', 'rejected'] as $status)
-                                <option value="{{ $status }}" @selected($user->kyc_status === $status)>{{ ucfirst($status) }}</option>
+                            @foreach (\App\Models\User::kycStatusOptions() as $status => $label)
+                                <option value="{{ $status }}" @selected($user->kyc_status === $status)>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>

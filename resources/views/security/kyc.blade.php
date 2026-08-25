@@ -10,11 +10,12 @@
                     'bg-green-100 text-green-700' => auth()->user()->kyc_status === 'verified',
                     'bg-amber-100 text-amber-700' => in_array(auth()->user()->kyc_status, ['unverified', 'pending']),
                     'bg-red-100 text-red-700' => auth()->user()->kyc_status === 'rejected',
-                ])>{{ auth()->user()->kyc_status }}</span>
+                ])>{{ auth()->user()->kycLabel() }}</span>
             </div>
             <p class="text-sm text-charcoal-500 dark:text-charcoal-400 mb-4">
                 @if (auth()->user()->kyc_status !== 'verified')
-                    KYC pending &mdash; trading limits apply. Complete verification to increase your daily trading limit.
+                    KYC is entirely optional &mdash; it never blocks trading. Completing it simply raises your daily trading limit from
+                    <strong>${{ number_format(auth()->user()->daily_trade_limit, 2) }}</strong> to a much higher tier.
                 @else
                     Your identity has been verified. You are trading with the highest limits available.
                 @endif
