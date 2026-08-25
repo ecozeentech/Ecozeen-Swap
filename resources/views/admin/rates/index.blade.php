@@ -27,6 +27,23 @@
                                 @csrf @method('PUT')
                                 <input type="hidden" name="is_active" value="1">
                                 <div>
+                                    <x-input-label value="Crypto Asset" class="text-xs" />
+                                    <select name="crypto_asset_id" class="mt-1 w-full text-sm rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white">
+                                        @foreach ($cryptoAssets as $asset)
+                                            <option value="{{ $asset->id }}" @selected($asset->id === $rate->crypto_asset_id)>{{ $asset->name }} ({{ $asset->symbol }}{{ $asset->network ? ' — '.$asset->network : '' }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <x-input-label value="Fiat Currency" class="text-xs" />
+                                    <select name="fiat_currency_id" class="mt-1 w-full text-sm rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white">
+                                        @foreach ($fiatCurrencies as $fiat)
+                                            <option value="{{ $fiat->id }}" @selected($fiat->id === $rate->fiat_currency_id)>{{ $fiat->name }} ({{ $fiat->code }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <p class="col-span-2 text-[11px] text-charcoal-400 -mt-1">Changing the pair re-points this rate entirely — the previous pair will show no active rate until a new one is set.</p>
+                                <div>
                                     <x-input-label value="Buy Rate" class="text-xs" />
                                     <x-text-input name="buy_rate" type="number" step="0.00000001" value="{{ $rate->buy_rate }}" class="mt-1 w-full text-sm" />
                                 </div>

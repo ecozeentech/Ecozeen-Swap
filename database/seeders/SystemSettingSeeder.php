@@ -23,5 +23,6 @@ class SystemSettingSeeder extends Seeder
         SystemSetting::set('company_name', 'Ecozeen Tech Ltd', 'string', 'branding');
         SystemSetting::set('company_reg_ng', '1835204', 'string', 'branding');
         SystemSetting::set('company_reg_uk', '16582062', 'string', 'branding');
+        SystemSetting::set('default_display_currency', 'USD', 'string', 'display');
     }
 }

@@ -36,6 +36,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'postal_code',
         'password',
         'kyc_status',
+        'display_currency',
         'daily_trade_limit',
         'current_balance_usd_equivalent',
     ];
@@ -122,6 +123,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isKycVerified(): bool
     {
         return $this->kyc_status === 'verified';
+    }
+
+    /**
+     * The fiat currency code the dashboard should display totals in:
+     * the user's own preference if they've set one, otherwise the
+     * platform-wide admin default, otherwise USD.
+     */
+    public function displayCurrencyCode(): string
+    {
+        return $this->display_currency
+            ?: SystemSetting::get('default_display_currency', 'USD');
     }
 
     /**

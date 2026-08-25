@@ -10,6 +10,7 @@ use App\Services\FlutterwaveService;
 use App\Services\PaystackService;
 use App\Services\RateService;
 use App\Services\TradeService;
+use App\Support\Features;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -28,6 +29,8 @@ class BuyController extends Controller
     {
         return view('trade.buy-sell', [
             'activeTab' => 'buy',
+            'buyEnabled' => Features::isEnabled(Features::BUY),
+            'sellEnabled' => Features::isEnabled(Features::SELL),
             'cryptoAssets' => $this->rates->cryptoAssets(),
             'fiatCurrencies' => $this->rates->fiatCurrencies(),
             'activeRates' => $this->rates->allActiveRates(),

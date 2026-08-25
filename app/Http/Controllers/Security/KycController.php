@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Security;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\KycDocument;
+use App\Notifications\AdminAlert;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -41,6 +42,13 @@ class KycController extends Controller
         }
 
         ActivityLog::record($user->id, 'kyc_document_uploaded', ['document_type' => $request->input('document_type')]);
+
+        AdminAlert::broadcast(
+            'KYC Document Submitted',
+            "{$user->name} (@{$user->username}) submitted a ".str_replace('_', ' ', $request->input('document_type')).' for review.',
+            'info',
+            route('admin.users.show', $user)
+        );
 
         return redirect()->route('security.kyc')->with('status', 'kyc-document-uploaded');
     }

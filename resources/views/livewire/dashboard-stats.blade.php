@@ -3,13 +3,23 @@
         <div class="flex items-start justify-between">
             <div>
                 <p class="text-sm text-brand-100">Total Portfolio Balance</p>
-                <p class="text-3xl sm:text-4xl font-extrabold mt-1" x-show="!hidden">${{ number_format($portfolioUsd, 2) }}</p>
+                <p class="text-3xl sm:text-4xl font-extrabold mt-1" x-show="!hidden">{{ $displayCurrency->symbol ?? '$' }}{{ number_format($portfolioDisplay, 2) }}</p>
                 <p class="text-3xl sm:text-4xl font-extrabold mt-1" x-show="hidden" style="display:none">••••••</p>
+                @if (($displayCurrency->code ?? 'USD') !== 'USD')
+                    <p class="text-xs text-brand-100 mt-0.5">&asymp; ${{ number_format($portfolioUsd, 2) }} USD</p>
+                @endif
             </div>
-            <button type="button" @click="hidden = !hidden" class="rounded-full p-1.5 bg-white/10 hover:bg-white/20" aria-label="Toggle balance visibility">
-                <svg x-show="!hidden" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                <svg x-show="hidden" style="display:none" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.774 3.162 10.066 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243L9.88 9.88" /></svg>
-            </button>
+            <div class="flex items-center gap-1.5">
+                <select wire:model.live="selectedCurrency" class="rounded-lg bg-white/10 border-white/20 text-white text-xs py-1.5 pl-2 pr-6 focus:ring-white/40 focus:border-white/40 [&>option]:text-charcoal-900">
+                    @foreach ($availableCurrencies as $currency)
+                        <option value="{{ $currency->code }}">{{ $currency->code }}</option>
+                    @endforeach
+                </select>
+                <button type="button" @click="hidden = !hidden" class="rounded-full p-1.5 bg-white/10 hover:bg-white/20" aria-label="Toggle balance visibility">
+                    <svg x-show="!hidden" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    <svg x-show="hidden" style="display:none" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.774 3.162 10.066 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243L9.88 9.88" /></svg>
+                </button>
+            </div>
         </div>
 
         <div class="mt-4 h-12 w-full max-w-xs" aria-hidden="true">

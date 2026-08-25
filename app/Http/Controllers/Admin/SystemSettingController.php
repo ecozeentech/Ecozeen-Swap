@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\FiatCurrency;
 use App\Models\SystemSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,10 @@ class SystemSettingController extends Controller
 {
     public function index(): View
     {
-        return view('admin.settings.index', ['settings' => SystemSetting::allSettings()]);
+        return view('admin.settings.index', [
+            'settings' => SystemSetting::allSettings(),
+            'fiatCurrencies' => FiatCurrency::query()->active()->orderBy('code')->get(),
+        ]);
     }
 
     public function update(Request $request): RedirectResponse
@@ -25,6 +29,7 @@ class SystemSettingController extends Controller
             'custom_chat_url' => ['nullable', 'url'],
             'giftcard_buyback_rate' => ['required', 'numeric', 'min:0', 'max:100'],
             'bank_transfer_memo_notice' => ['nullable', 'string', 'max:500'],
+            'default_display_currency' => ['required', 'exists:fiat_currencies,code'],
         ]);
 
         SystemSetting::set('coming_soon_message', $request->input('coming_soon_message', 'This feature is coming soon. Please check back shortly.'), 'string', 'features');
@@ -36,6 +41,7 @@ class SystemSettingController extends Controller
             'bank_transfer_memo_notice',
             'Do not reference cryptocurrency or crypto payments in your bank transfer memo/description.'
         ), 'string', 'security');
+        SystemSetting::set('default_display_currency', strtoupper($request->input('default_display_currency')), 'string', 'display');
 
         ActivityLog::record(auth()->id(), 'admin_updated_system_settings');
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Notifications\AdminAlert;
 use App\Services\UserOnboardingService;
 use App\Support\Features;
 use Illuminate\Auth\Events\Registered;
@@ -68,6 +69,13 @@ class RegisteredUserController extends Controller
         $this->onboarding->provisionWallets($user);
 
         ActivityLog::record($user->id, 'registered', ['username' => $user->username]);
+
+        AdminAlert::broadcast(
+            'New User Registered',
+            "{$user->name} (@{$user->username}) just created an account.",
+            'info',
+            route('admin.users.show', $user)
+        );
 
         event(new Registered($user));
 

@@ -9,6 +9,18 @@ use Livewire\Component;
 
 class DashboardStats extends Component
 {
+    public ?string $selectedCurrency = null;
+
+    public function mount(): void
+    {
+        $this->selectedCurrency = auth()->user()->displayCurrencyCode();
+    }
+
+    public function updatedSelectedCurrency(string $value): void
+    {
+        auth()->user()->update(['display_currency' => $value]);
+    }
+
     public function render()
     {
         $user = auth()->user();
@@ -35,8 +47,16 @@ class DashboardStats extends Component
             }
         }
 
+        $displayCurrency = FiatCurrency::query()->where('code', $this->selectedCurrency)->active()->first() ?? $usd;
+
+        $rateToUsd = (float) ($displayCurrency?->exchange_rate_to_usd ?: 1);
+        $portfolioInDisplayCurrency = $rateToUsd > 0 ? $portfolioUsd / $rateToUsd : $portfolioUsd;
+
         return view('livewire.dashboard-stats', [
             'portfolioUsd' => round($portfolioUsd, 2),
+            'portfolioDisplay' => round($portfolioInDisplayCurrency, 2),
+            'displayCurrency' => $displayCurrency,
+            'availableCurrencies' => FiatCurrency::query()->active()->orderBy('code')->get(),
             'recentTransactions' => $user->transactions()->latest()->limit(5)->get(),
         ]);
     }

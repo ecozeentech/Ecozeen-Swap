@@ -56,20 +56,43 @@ class DailyRateController extends Controller
     public function update(Request $request, DailyRate $dailyRate): RedirectResponse
     {
         $request->validate([
+            'crypto_asset_id' => ['required', 'exists:crypto_assets,id'],
+            'fiat_currency_id' => ['required', 'exists:fiat_currencies,id'],
             'buy_rate' => ['required', 'numeric', 'min:0'],
             'sell_rate' => ['required', 'numeric', 'min:0', 'gte:buy_rate'],
             'expires_at' => ['nullable', 'date'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
+        $newCryptoAssetId = (int) $request->input('crypto_asset_id');
+        $newFiatCurrencyId = (int) $request->input('fiat_currency_id');
+        $pairChanged = $newCryptoAssetId !== $dailyRate->crypto_asset_id || $newFiatCurrencyId !== $dailyRate->fiat_currency_id;
+
+        // If the admin re-pointed this rate at a different pair and that
+        // pair already has its own active rate, deactivate that one first
+        // so there's never more than one active rate per pair.
+        if ($pairChanged && $request->boolean('is_active')) {
+            DailyRate::query()
+                ->where('crypto_asset_id', $newCryptoAssetId)
+                ->where('fiat_currency_id', $newFiatCurrencyId)
+                ->where('id', '!=', $dailyRate->id)
+                ->where('is_active', true)
+                ->update(['is_active' => false]);
+        }
+
         $dailyRate->update([
+            'crypto_asset_id' => $newCryptoAssetId,
+            'fiat_currency_id' => $newFiatCurrencyId,
             'buy_rate' => $request->input('buy_rate'),
             'sell_rate' => $request->input('sell_rate'),
             'expires_at' => $request->input('expires_at') ?: $dailyRate->expires_at,
             'is_active' => $request->boolean('is_active'),
         ]);
 
-        ActivityLog::record(auth()->id(), 'admin_overrode_daily_rate', ['rate_id' => $dailyRate->id]);
+        ActivityLog::record(auth()->id(), 'admin_overrode_daily_rate', [
+            'rate_id' => $dailyRate->id,
+            'pair_changed' => $pairChanged,
+        ]);
 
         return back()->with('status', 'rate-updated');
     }

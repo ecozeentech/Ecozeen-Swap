@@ -117,12 +117,12 @@ Route::middleware('auth')->group(function () {
     // Wallet
     Route::prefix('wallet')->name('wallet.')->group(function () {
         Route::get('/', [WalletController::class, 'index'])->name('index');
-        Route::get('/fund', [WalletController::class, 'fundForm'])->name('fund');
+        Route::get('/fund', [WalletController::class, 'fundForm'])->middleware('feature:deposits_enabled')->name('fund');
         Route::post('/fund', [WalletController::class, 'fund'])->middleware(['verified', 'feature:deposits_enabled'])->name('fund.store');
         Route::get('/fund/{transaction}/bank', [WalletController::class, 'fundBankForm'])->name('fund.bank');
         Route::post('/fund/{transaction}/proof', [WalletController::class, 'uploadProof'])->name('fund.proof');
         Route::get('/fund/callback/{gateway}', [WalletController::class, 'fundCallback'])->name('fund.callback');
-        Route::get('/deposit/{cryptoAsset}', [WalletController::class, 'depositAddress'])->name('deposit');
+        Route::get('/deposit/{cryptoAsset}', [WalletController::class, 'depositAddress'])->middleware('feature:deposits_enabled')->name('deposit');
         Route::get('/withdraw', [WalletController::class, 'withdrawForm'])->middleware('feature:withdrawals_enabled')->name('withdraw');
         Route::post('/withdraw', [WalletController::class, 'withdraw'])
             ->middleware(['verified', 'trusted.ip', 'feature:withdrawals_enabled', 'throttle:withdraw'])
