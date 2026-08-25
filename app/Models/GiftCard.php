@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\ResilientEncrypted;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,8 +32,8 @@ class GiftCard extends Model
     protected function casts(): array
     {
         return [
-            'card_number_hashed' => 'encrypted',
-            'pin' => 'encrypted',
+            'card_number_hashed' => ResilientEncrypted::class,
+            'pin' => ResilientEncrypted::class,
             'face_value' => 'decimal:2',
             'rate_applied' => 'decimal:4',
             'selling_price' => 'decimal:2',

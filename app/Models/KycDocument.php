@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\ResilientEncrypted;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,7 @@ class KycDocument extends Model
     protected function casts(): array
     {
         return [
-            'file_path' => 'encrypted',
+            'file_path' => ResilientEncrypted::class,
             'verified_at' => 'datetime',
         ];
     }
