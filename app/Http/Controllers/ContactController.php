@@ -12,7 +12,7 @@ class ContactController extends Controller
 {
     public function show(): View
     {
-        $page = Page::findBySlug('contact-us');
+        $page = Page::findBySlug('contact');
 
         return view('pages.contact', ['page' => $page]);
     }
