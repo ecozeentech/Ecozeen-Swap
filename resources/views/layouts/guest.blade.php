@@ -17,6 +17,7 @@
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
     </head>
     <body class="font-sans text-charcoal-900 antialiased bg-charcoal-50 dark:bg-charcoal-950 dark:text-charcoal-100">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0">
@@ -38,5 +39,6 @@
                 &copy; {{ now()->year }} Ecozeen Tech Ltd. NG: 1835204 &middot; UK: 16582062. All rights reserved.
             </p>
         </div>
+        @livewireScripts
     </body>
 </html>
