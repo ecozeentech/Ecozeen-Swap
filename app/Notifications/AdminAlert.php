@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\User;
+use App\Support\Notify;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -55,6 +56,6 @@ class AdminAlert extends Notification
             return;
         }
 
-        \Illuminate\Support\Facades\Notification::send($admins, new self($title, $message, $level, $url));
+        Notify::send($admins, new self($title, $message, $level, $url));
     }
 }

@@ -16,6 +16,7 @@ use App\Notifications\AdminAlert;
 use App\Services\FlutterwaveService;
 use App\Services\PaystackService;
 use App\Services\WalletService;
+use App\Support\Notify;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -206,7 +207,7 @@ class WalletController extends Controller
             $transaction->update(['status' => 'completed', 'processed_at' => now()]);
         });
 
-        $transaction->user->notify(new AccountNotification(
+        Notify::send($transaction->user, new AccountNotification(
             'Deposit Confirmed',
             number_format((float) $transaction->amount, 2)." {$transaction->currency_code} has been credited to your wallet.",
             'success',

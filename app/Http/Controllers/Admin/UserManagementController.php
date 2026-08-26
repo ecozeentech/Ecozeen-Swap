@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\KycDocument;
 use App\Models\User;
 use App\Notifications\KycStatusUpdated;
+use App\Support\Notify;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -131,7 +132,7 @@ class UserManagementController extends Controller
 
         if ($allApproved && ! $hasRejected) {
             $user->update(['kyc_status' => 'verified', 'daily_trade_limit' => 5000000]);
-            $user->notify(new KycStatusUpdated('verified'));
+            Notify::send($user, new KycStatusUpdated('verified'));
         }
 
         ActivityLog::record(auth()->id(), 'admin_approved_kyc', ['user_id' => $user->id, 'document_id' => $kycDocument->id]);
@@ -151,7 +152,7 @@ class UserManagementController extends Controller
         ]);
 
         $kycDocument->user->update(['kyc_status' => 'rejected']);
-        $kycDocument->user->notify(new KycStatusUpdated('rejected', $request->input('reason')));
+        Notify::send($kycDocument->user, new KycStatusUpdated('rejected', $request->input('reason')));
 
         ActivityLog::record(auth()->id(), 'admin_rejected_kyc', ['user_id' => $kycDocument->user_id, 'document_id' => $kycDocument->id]);
 

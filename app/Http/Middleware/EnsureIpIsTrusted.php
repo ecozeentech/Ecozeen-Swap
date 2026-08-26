@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\ActivityLog;
 use App\Models\UserTrustedIp;
 use App\Notifications\NewIpDetected;
+use App\Support\Notify;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,7 +42,7 @@ class EnsureIpIsTrusted
                 'verification_code' => (string) random_int(100000, 999999),
             ]);
 
-            $user->notify(new NewIpDetected($trusted));
+            Notify::send($user, new NewIpDetected($trusted));
 
             ActivityLog::record($user->id, 'new_ip_detected', ['ip' => $ip]);
         }
