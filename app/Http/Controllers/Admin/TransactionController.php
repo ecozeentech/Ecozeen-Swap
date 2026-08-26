@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Notifications\TransactionStatusUpdated;
 use App\Services\TradeService;
 use App\Services\WalletService;
+use App\Support\Notify;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -55,7 +56,7 @@ class TransactionController extends Controller
             }
         });
 
-        $transaction->user->notify(new TransactionStatusUpdated($transaction->fresh()));
+        Notify::send($transaction->user, new TransactionStatusUpdated($transaction->fresh()));
 
         ActivityLog::record(auth()->id(), 'admin_marked_transaction_paid', ['reference' => $transaction->reference]);
 
@@ -66,7 +67,7 @@ class TransactionController extends Controller
     {
         $this->trades->confirmSell($transaction, auth()->user());
 
-        $transaction->user->notify(new TransactionStatusUpdated($transaction->fresh()));
+        Notify::send($transaction->user, new TransactionStatusUpdated($transaction->fresh()));
 
         ActivityLog::record(auth()->id(), 'admin_confirmed_sell', ['reference' => $transaction->reference]);
 
@@ -94,7 +95,7 @@ class TransactionController extends Controller
             ]);
         });
 
-        $transaction->user->notify(new TransactionStatusUpdated($transaction->fresh()));
+        Notify::send($transaction->user, new TransactionStatusUpdated($transaction->fresh()));
 
         ActivityLog::record(auth()->id(), 'admin_rejected_transaction', ['reference' => $transaction->reference]);
 
