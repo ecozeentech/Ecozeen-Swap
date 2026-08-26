@@ -19,6 +19,14 @@
             <div class="flex justify-between"><dt class="text-charcoal-400">Created</dt><dd class="font-semibold">{{ $transaction->created_at->format('M d, Y H:i') }}</dd></div>
         </dl>
 
+        @if ($transaction->type === 'buy' && ! empty($transaction->metadata['receiving_wallet_address'] ?? null))
+            <div class="mt-4 rounded-lg bg-brand-50 dark:bg-charcoal-800 border border-brand-100 dark:border-charcoal-700 p-3">
+                <p class="text-xs font-semibold uppercase tracking-wide text-brand-700 dark:text-brand-400 mb-1">Deliver externally to</p>
+                <p class="text-sm font-mono break-all">{{ $transaction->metadata['receiving_wallet_address'] }}</p>
+                <p class="text-xs text-charcoal-400 mt-1">The user asked for this purchase to be sent to the address above instead of held in their Ecozeen Swap wallet. Send it manually from platform reserves once payment is confirmed, then mark this transaction paid.</p>
+            </div>
+        @endif
+
         @if ($transaction->metadata)
             <div class="mt-4 rounded-lg bg-charcoal-50 dark:bg-charcoal-800 p-3 text-xs font-mono overflow-x-auto">
                 <pre>{{ json_encode($transaction->metadata, JSON_PRETTY_PRINT) }}</pre>

@@ -55,6 +55,15 @@
                                     </div>
                                 </div>
 
+                                <div class="rounded-lg border border-charcoal-200 dark:border-charcoal-700 px-4 py-3">
+                                    <x-input-label value="Receiving Wallet Address (optional)" />
+                                    <x-text-input name="receiving_wallet_address" value="{{ old('receiving_wallet_address') }}" class="mt-1 w-full font-mono text-sm" placeholder="Paste a crypto wallet address to have your purchase sent there" />
+                                    <p class="mt-1 text-xs text-charcoal-400">Double-check the address and network before submitting — crypto sent to the wrong address can't be recovered. Leave this blank to keep your purchase in your Ecozeen Swap wallet instead, where you can swap, sell, or withdraw it later.</p>
+                                    @error('receiving_wallet_address')
+                                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
                                 <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg shadow-sm">Execute Buy Order</button>
                             </form>
                         </div>

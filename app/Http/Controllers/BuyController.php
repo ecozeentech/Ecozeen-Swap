@@ -46,6 +46,7 @@ class BuyController extends Controller
             'fiat_currency_id' => ['required', 'exists:fiat_currencies,id'],
             'fiat_amount' => ['required', 'numeric', 'min:1'],
             'payment_method' => ['required', 'in:paystack,flutterwave,bank_transfer'],
+            'receiving_wallet_address' => ['nullable', 'string', 'max:255'],
         ]);
 
         $user = $request->user();
@@ -58,7 +59,8 @@ class BuyController extends Controller
                 $crypto,
                 $fiat,
                 (float) $request->input('fiat_amount'),
-                $request->input('payment_method')
+                $request->input('payment_method'),
+                array_filter(['receiving_wallet_address' => $request->input('receiving_wallet_address')])
             );
         } catch (RuntimeException $e) {
             return back()->withErrors(['fiat_amount' => $e->getMessage()]);
