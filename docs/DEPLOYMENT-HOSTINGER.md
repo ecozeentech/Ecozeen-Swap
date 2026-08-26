@@ -125,7 +125,8 @@ CACHE_STORE=database
 QUEUE_CONNECTION=database
 
 MAIL_MAILER=smtp
-MAIL_HOST=smtp.hostinger.com   # or use Mailgun/Brevo/SendGrid for better deliverability
+MAIL_HOST=smtp.hostinger.com   # see "Email / SMTP setup" below for other providers
+MAIL_SCHEME=tls
 MAIL_PORT=587
 MAIL_USERNAME=no-reply@ecozeenswap.com
 MAIL_PASSWORD=your-mailbox-password
@@ -144,6 +145,74 @@ TAWKTO_EMBED_URL=
 
 `APP_DEBUG=false` is mandatory in production — leaving it `true` leaks stack traces and env
 values to anyone who triggers an error.
+
+### Email / SMTP setup
+
+Email powers account verification, password resets, KYC decisions, transaction status updates,
+and new-device sign-in alerts. It's driven entirely by the `MAIL_*` variables above — nothing else
+needs to change in the code.
+
+**Option A — Hostinger's own mailbox** (simplest, fine for low volume):
+
+1. hPanel → **Emails → Email Accounts** → create a mailbox (e.g. `no-reply@ecozeenswap.com`) and
+   note its password.
+2. Use these settings:
+   ```dotenv
+   MAIL_MAILER=smtp
+   MAIL_HOST=smtp.hostinger.com
+   MAIL_SCHEME=tls
+   MAIL_PORT=587
+   MAIL_USERNAME=no-reply@ecozeenswap.com
+   MAIL_PASSWORD=the-mailbox-password
+   MAIL_FROM_ADDRESS="no-reply@ecozeenswap.com"
+   MAIL_FROM_NAME="${APP_NAME}"
+   ```
+   (`MAIL_USERNAME` and `MAIL_FROM_ADDRESS` must be the exact mailbox you created — most SMTP
+   servers reject mail sent "from" an address that isn't the authenticated mailbox.)
+3. Caveat: outbound mail from shared-hosting IPs (Hostinger's included) frequently lands in spam,
+   especially at first, because the sending IP has no reputation yet and is shared with many other
+   sites. Fine to start with, but move to Option B if deliverability matters.
+
+**Option B — a transactional email provider** (better deliverability, still has a free tier):
+[Brevo](https://www.brevo.com) (300 emails/day free), Mailgun, SendGrid, and Postmark all work the
+same way — sign up, verify your sending domain (they'll give you DNS records to add, usually
+SPF/DKIM `TXT` records — add these in hPanel → **Domains → DNS Zone Editor**), then grab their
+SMTP credentials and use them instead:
+   ```dotenv
+   MAIL_MAILER=smtp
+   MAIL_HOST=smtp-relay.brevo.com   # or whatever host your provider gives you
+   MAIL_SCHEME=tls
+   MAIL_PORT=587
+   MAIL_USERNAME=your-provider-smtp-username
+   MAIL_PASSWORD=your-provider-smtp-key
+   MAIL_FROM_ADDRESS="no-reply@ecozeenswap.com"   # must match a domain you verified with the provider
+   MAIL_FROM_NAME="${APP_NAME}"
+   ```
+
+**Verifying it actually works** — after setting the variables above (whichever option), clear the
+config cache and send a real test email:
+
+```bash
+php artisan config:clear
+php artisan mail:test you@your-real-inbox.com
+```
+
+This app includes a `mail:test` command specifically for this — it reports a clear error
+(wrong host/port/credentials, blocked port, etc.) if something's misconfigured, or confirms the
+message went out without a transport error if everything's correct. Check the inbox (and spam
+folder, especially on first send) to confirm it actually arrived — a successful `mail:test` run
+only means the SMTP server *accepted* the message, not that it was delivered to the inbox.
+
+Once SMTP is confirmed working, every account email in the app starts working automatically with
+no further changes:
+- Email verification and password reset (sent immediately on registration / "forgot password")
+- KYC approved/rejected (sent when an admin reviews a submission)
+- Transaction status updates — buy marked paid, sell confirmed, any transaction rejected
+- New sign-in from an unrecognized IP address (asks the user to confirm it was them)
+
+If SMTP is temporarily down or misconfigured, none of the above business actions (approving KYC,
+marking a transaction paid, etc.) will fail because of it — a failed email delivery is logged to
+`storage/logs/laravel.log` instead of blocking the request.
 
 Generate the app key:
 
@@ -313,6 +382,7 @@ even after a correct deploy.
 | "419 Page Expired" on forms | `APP_URL` doesn't match the domain visitors use, or session cookie/domain mismatch — fix `APP_URL` and re-cache config. |
 | `composer install` complains about PHP version | Bump PHP to 8.3/8.4 in hPanel → PHP Configuration. |
 | Webhooks (Paystack/Flutterwave) not firing | Confirm the endpoint is reachable over HTTPS (`https://ecozeenswap.com/webhook/paystack`) and the secret keys in `/admin/gateways` match the gateway dashboard. |
+| Emails not arriving | Run `php artisan mail:test you@example.com` — a clear transport error there points to the exact wrong `MAIL_*` value. If it reports success but nothing arrives, check spam, and confirm `MAIL_FROM_ADDRESS` matches the authenticated mailbox/domain (many providers silently reject or spam-flag mismatches). Remember to `php artisan config:clear` after editing `.env`. |
 
 ## Limitations to be aware of on shared hosting
 
