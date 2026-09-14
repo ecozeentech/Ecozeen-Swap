@@ -9,9 +9,9 @@
 
         <title>{{ config('app.name', 'Ecozeen Swap') }} — {{ $title ?? 'Secure Crypto Trading' }}</title>
 
-        <link rel="manifest" href="{{ asset('manifest.json') }}">
+        <link rel="manifest" href="{{ route('pwa.manifest') }}">
         <link rel="icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'favicon.ico') }}">
-        <link rel="apple-touch-icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'images/icons/icon-192.png') }}">
+        <link rel="apple-touch-icon" href="{{ \App\Models\SystemSetting::assetUrl('pwa_icon_192', 'images/icons/icon-192.png') }}">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />

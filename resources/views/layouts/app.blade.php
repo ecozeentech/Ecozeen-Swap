@@ -8,9 +8,9 @@
 
         <title>{{ config('app.name', 'Ecozeen Swap') }} — {{ $title ?? 'Dashboard' }}</title>
 
-        <link rel="manifest" href="{{ asset('manifest.json') }}">
+        <link rel="manifest" href="{{ route('pwa.manifest') }}">
         <link rel="icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'favicon.ico') }}">
-        <link rel="apple-touch-icon" href="{{ \App\Models\SystemSetting::assetUrl('site_favicon', 'images/icons/icon-192.png') }}">
+        <link rel="apple-touch-icon" href="{{ \App\Models\SystemSetting::assetUrl('pwa_icon_192', 'images/icons/icon-192.png') }}">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
@@ -49,6 +49,15 @@
                 <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" @click="sidebarOpen = false">
                     @include('partials.nav-items')
                 </nav>
+                <div class="p-3 border-t border-charcoal-100 dark:border-charcoal-800">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-charcoal-600 dark:text-charcoal-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                            Log Out
+                        </button>
+                    </form>
+                </div>
             </aside>
 
             <!-- Main content -->
