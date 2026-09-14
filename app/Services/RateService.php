@@ -69,6 +69,34 @@ class RateService
         });
     }
 
+    /**
+     * Bring an existing (usually expired) rate back to life for another
+     * window instead of forcing the admin to delete it and create a new
+     * one from scratch. Keeps the same buy/sell rate values by default —
+     * pass new ones to adjust them at the same time.
+     */
+    public function renewRate(DailyRate $dailyRate, ?int $hoursValid = null, ?float $buyRate = null, ?float $sellRate = null): DailyRate
+    {
+        return DB::transaction(function () use ($dailyRate, $hoursValid, $buyRate, $sellRate) {
+            DailyRate::query()
+                ->where('crypto_asset_id', $dailyRate->crypto_asset_id)
+                ->where('fiat_currency_id', $dailyRate->fiat_currency_id)
+                ->where('id', '!=', $dailyRate->id)
+                ->where('is_active', true)
+                ->update(['is_active' => false]);
+
+            $dailyRate->update([
+                'buy_rate' => $buyRate ?? $dailyRate->buy_rate,
+                'sell_rate' => $sellRate ?? $dailyRate->sell_rate,
+                'starts_at' => now(),
+                'expires_at' => now()->addHours($hoursValid ?: 24),
+                'is_active' => true,
+            ]);
+
+            return $dailyRate->fresh();
+        });
+    }
+
     public function expireOutdatedRates(): int
     {
         return DailyRate::query()

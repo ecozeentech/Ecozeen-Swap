@@ -91,7 +91,7 @@
             </thead>
             <tbody class="divide-y divide-charcoal-100 dark:divide-charcoal-800">
                 @foreach ($history as $rate)
-                    <tr>
+                    <tr x-data="{ renewing: false }">
                         <td class="px-5 py-3 font-semibold">{{ $rate->cryptoAsset->symbol }}/{{ $rate->fiatCurrency->code }}</td>
                         <td class="px-5 py-3">{{ number_format($rate->buy_rate, 2) }}</td>
                         <td class="px-5 py-3">{{ number_format($rate->sell_rate, 2) }}</td>
@@ -102,11 +102,38 @@
                             </span>
                         </td>
                         <td class="px-5 py-3 text-charcoal-400">{{ $rate->expires_at->format('M d, H:i') }}</td>
-                        <td class="px-5 py-3 text-right">
+                        <td class="px-5 py-3 text-right whitespace-nowrap">
+                            @if ($rate->isExpired() || ! $rate->is_active)
+                                <button type="button" @click="renewing = !renewing" class="text-xs font-semibold text-brand-600 hover:underline mr-3">Renew</button>
+                            @endif
                             <form method="POST" action="{{ route('admin.rates.destroy', $rate) }}" onsubmit="return confirm('Delete this rate permanently?')" class="inline">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-xs font-semibold text-red-600 hover:underline">Delete</button>
                             </form>
+                        </td>
+                    </tr>
+                    <tr x-show="renewing" style="display:none">
+                        <td colspan="7" class="px-5 pb-4 bg-charcoal-50 dark:bg-charcoal-800/40">
+                            <form method="POST" action="{{ route('admin.rates.renew', $rate) }}" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 items-end">
+                                @csrf
+                                <div>
+                                    <x-input-label value="New Buy Rate" class="text-xs" />
+                                    <x-text-input name="buy_rate" type="number" step="0.00000001" value="{{ $rate->buy_rate }}" class="mt-1 w-full text-sm" />
+                                </div>
+                                <div>
+                                    <x-input-label value="New Sell Rate" class="text-xs" />
+                                    <x-text-input name="sell_rate" type="number" step="0.00000001" value="{{ $rate->sell_rate }}" class="mt-1 w-full text-sm" />
+                                </div>
+                                <div>
+                                    <x-input-label value="Valid For (hours)" class="text-xs" />
+                                    <x-text-input name="hours_valid" type="number" min="1" max="168" value="24" class="mt-1 w-full text-sm" />
+                                </div>
+                                <div class="flex gap-2">
+                                    <x-secondary-button type="button" @click="renewing = false" class="!text-[10px] !px-3 !py-1.5">Cancel</x-secondary-button>
+                                    <x-primary-button type="submit" class="!text-[10px] !px-3 !py-1.5">Renew Rate</x-primary-button>
+                                </div>
+                            </form>
+                            <p class="text-[11px] text-charcoal-400 pb-2">Reuses this same rate record with a fresh 24h-style window instead of creating a new one — no need to delete expired rates.</p>
                         </td>
                     </tr>
                 @endforeach

@@ -99,11 +99,47 @@ class DailyRateController extends Controller
 
     public function toggleActive(DailyRate $dailyRate): RedirectResponse
     {
+        // Flipping is_active on an already-expired rate would leave it
+        // matching is_active=true but still invisible everywhere (the
+        // "active" scope also requires expires_at to be in the future) —
+        // renew() is the correct way to bring an expired rate back.
+        if ($dailyRate->isExpired() && ! $dailyRate->is_active) {
+            return back()->withErrors(['rate' => 'This rate has expired — use "Renew" to reactivate it with a fresh expiry window instead.']);
+        }
+
         $dailyRate->update(['is_active' => ! $dailyRate->is_active]);
 
         ActivityLog::record(auth()->id(), $dailyRate->is_active ? 'admin_activated_daily_rate' : 'admin_deactivated_daily_rate', ['rate_id' => $dailyRate->id]);
 
         return back()->with('status', $dailyRate->is_active ? 'rate-activated' : 'rate-deactivated');
+    }
+
+    public function renew(Request $request, DailyRate $dailyRate): RedirectResponse
+    {
+        $request->validate([
+            'hours_valid' => ['nullable', 'integer', 'min:1', 'max:168'],
+            'buy_rate' => ['nullable', 'numeric', 'min:0'],
+            'sell_rate' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        if ($request->filled('buy_rate') && $request->filled('sell_rate') && (float) $request->input('sell_rate') < (float) $request->input('buy_rate')) {
+            return back()->withErrors(['sell_rate' => 'Sell rate must be greater than or equal to the buy rate.']);
+        }
+
+        $this->rates->renewRate(
+            $dailyRate,
+            $request->input('hours_valid') ? (int) $request->input('hours_valid') : null,
+            $request->filled('buy_rate') ? (float) $request->input('buy_rate') : null,
+            $request->filled('sell_rate') ? (float) $request->input('sell_rate') : null,
+        );
+
+        ActivityLog::record(auth()->id(), 'admin_renewed_daily_rate', [
+            'rate_id' => $dailyRate->id,
+            'crypto_asset_id' => $dailyRate->crypto_asset_id,
+            'fiat_currency_id' => $dailyRate->fiat_currency_id,
+        ]);
+
+        return back()->with('status', 'rate-renewed');
     }
 
     public function destroy(DailyRate $dailyRate): RedirectResponse
