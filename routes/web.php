@@ -15,6 +15,8 @@ use App\Http\Controllers\Admin\GiftCardVerificationController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\PaymentGatewayController;
 use App\Http\Controllers\Admin\PwaSettingsController;
+use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
+use App\Http\Controllers\Admin\ReferralWithdrawalController as AdminReferralWithdrawalController;
 use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
@@ -29,6 +31,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PwaManifestController;
+use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\Security\ActivityLogController;
 use App\Http\Controllers\Security\IpVerificationController;
 use App\Http\Controllers\Security\KycController;
@@ -119,6 +122,13 @@ Route::middleware('auth')->group(function () {
         Route::put('/{bankAccount}', [BankAccountController::class, 'update'])->name('update');
         Route::post('/{bankAccount}/default', [BankAccountController::class, 'setDefault'])->name('set-default');
         Route::delete('/{bankAccount}', [BankAccountController::class, 'destroy'])->name('destroy');
+    });
+
+    // Referral Program
+    Route::prefix('referrals')->name('referrals.')->middleware('feature:referrals_enabled')->group(function () {
+        Route::get('/', [ReferralController::class, 'index'])->name('index');
+        Route::post('/withdraw', [ReferralController::class, 'store'])->middleware('verified')->name('withdraw');
+        Route::delete('/withdraw/{withdrawal}', [ReferralController::class, 'cancel'])->name('withdraw.cancel');
     });
 
     // Wallet
@@ -232,6 +242,15 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     Route::get('/settings', [SystemSettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SystemSettingController::class, 'update'])->name('settings.update');
+
+    Route::get('/referrals', [AdminReferralController::class, 'index'])->name('referrals.index');
+    Route::put('/referrals/settings', [AdminReferralController::class, 'updateSettings'])->name('referrals.settings');
+    Route::post('/referrals/commissions/{commission}/reverse', [AdminReferralController::class, 'reverseCommission'])->name('referrals.reverse-commission');
+
+    Route::get('/referrals/withdrawals', [AdminReferralWithdrawalController::class, 'index'])->name('referrals.withdrawals');
+    Route::post('/referrals/withdrawals/{withdrawal}/approve', [AdminReferralWithdrawalController::class, 'approve'])->name('referrals.withdrawals.approve');
+    Route::post('/referrals/withdrawals/{withdrawal}/paid', [AdminReferralWithdrawalController::class, 'markPaid'])->name('referrals.withdrawals.paid');
+    Route::post('/referrals/withdrawals/{withdrawal}/reject', [AdminReferralWithdrawalController::class, 'reject'])->name('referrals.withdrawals.reject');
 
     Route::get('/branding', [BrandingController::class, 'edit'])->name('branding.edit');
     Route::put('/branding', [BrandingController::class, 'update'])->name('branding.update');

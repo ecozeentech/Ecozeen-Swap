@@ -4,6 +4,13 @@
     <h2 class="text-xl font-bold text-charcoal-900 dark:text-white mb-1">Create your account</h2>
     <p class="text-sm text-charcoal-500 dark:text-charcoal-400 mb-6">Start buying, selling, and swapping crypto with Ecozeen Swap.</p>
 
+    @if ($referrer ?? null)
+        <div class="mb-4 rounded-lg bg-brand-50 dark:bg-charcoal-800 border border-brand-100 dark:border-charcoal-700 px-4 py-3 text-sm text-brand-700 dark:text-brand-400 flex items-center gap-2">
+            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4" /></svg>
+            You were invited by <strong>&#64;{{ $referrer->username }}</strong>.
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('register') }}">
         @csrf
 

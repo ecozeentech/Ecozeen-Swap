@@ -7,9 +7,11 @@ use App\Casts\ResilientEncryptedArray;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -27,6 +29,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'username',
         'email',
+        'referral_code',
+        'referred_by',
         'phone',
         'avatar',
         'address',
@@ -115,6 +119,40 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(BankAccount::class);
     }
 
+    /**
+     * The user who referred this account, if any.
+     */
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'referred_by');
+    }
+
+    /**
+     * Accounts this user has referred.
+     */
+    public function referredUsers(): HasMany
+    {
+        return $this->hasMany(self::class, 'referred_by');
+    }
+
+    /**
+     * Commissions this user has earned as a referrer.
+     */
+    public function referralCommissions(): HasMany
+    {
+        return $this->hasMany(ReferralCommission::class, 'referrer_id');
+    }
+
+    public function referralWithdrawals(): HasMany
+    {
+        return $this->hasMany(ReferralWithdrawal::class);
+    }
+
+    public function referralLink(): string
+    {
+        return route('register', ['ref' => $this->referral_code]);
+    }
+
     public function hasTwoFactorEnabled(): bool
     {
         return ! is_null($this->two_factor_secret) && ! is_null($this->two_factor_confirmed_at);
@@ -198,6 +236,19 @@ class User extends Authenticatable implements MustVerifyEmail
             if ($user->daily_trade_limit === null) {
                 $user->daily_trade_limit = '100000.00';
             }
+
+            if (empty($user->referral_code)) {
+                $user->referral_code = self::generateUniqueReferralCode();
+            }
         });
+    }
+
+    public static function generateUniqueReferralCode(): string
+    {
+        do {
+            $code = strtoupper(Str::random(8));
+        } while (self::where('referral_code', $code)->exists());
+
+        return $code;
     }
 }

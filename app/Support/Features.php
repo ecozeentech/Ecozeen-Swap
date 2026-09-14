@@ -29,6 +29,8 @@ class Features
 
     public const REGISTRATION = 'registration_enabled';
 
+    public const REFERRALS = 'referrals_enabled';
+
     /**
      * @return array<string, string>
      */
@@ -43,6 +45,7 @@ class Features
             self::WITHDRAWALS => 'Withdrawals',
             self::DEPOSITS => 'Deposits',
             self::REGISTRATION => 'New Registrations',
+            self::REFERRALS => 'Referral Program',
         ];
     }
 

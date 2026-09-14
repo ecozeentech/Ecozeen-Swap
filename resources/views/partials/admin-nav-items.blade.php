@@ -20,6 +20,10 @@ $sectionLabel = fn ($label) => "<p class=\"px-3 pt-4 pb-1 text-[11px] font-semib
 {!! $adminLink('admin.crypto-wallets.index', 'Crypto Wallets', '<path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M4 10h16M4 10V6l8-4 8 4v4M6 10v11M10 10v11M14 10v11M18 10v11" />') !!}
 {!! $adminLink('admin.transactions.index', 'Transactions', '<path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z" />') !!}
 
+{!! $sectionLabel('Referral Program') !!}
+{!! $adminLink('admin.referrals.index', 'Overview &amp; Settings', '<path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4" />') !!}
+{!! $adminLink('admin.referrals.withdrawals', 'Withdrawal Requests', '<path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M5 6h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2zm11 8h2" />') !!}
+
 {!! $sectionLabel('Gift Cards') !!}
 {!! $adminLink('admin.giftcard-products.index', 'Gift Card Catalog', '<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 10-2 2h2zm0 0a2 2 0 102-2h-2zm-8 5h16M5 8h14a1 1 0 011 1v3H4V9a1 1 0 011-1zm-1 4h16v7a1 1 0 01-1 1H5a1 1 0 01-1-1v-7z" />') !!}
 {!! $adminLink('admin.giftcards.index', 'Verify Submissions', '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />') !!}

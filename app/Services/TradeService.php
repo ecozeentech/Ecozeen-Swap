@@ -20,6 +20,7 @@ class TradeService
     public function __construct(
         protected RateService $rates,
         protected WalletService $wallets,
+        protected ReferralService $referrals,
     ) {}
 
     /**
@@ -73,7 +74,9 @@ class TradeService
 
     public function completeBuy(Transaction $transaction, ?User $admin = null): Transaction
     {
-        return DB::transaction(function () use ($transaction, $admin) {
+        $wasAlreadyCompleted = $transaction->fresh()?->status === 'completed';
+
+        $transaction = DB::transaction(function () use ($transaction, $admin) {
             $transaction = Transaction::query()->lockForUpdate()->findOrFail($transaction->id);
 
             if ($transaction->status === 'completed') {
@@ -97,6 +100,12 @@ class TradeService
 
             return $transaction;
         });
+
+        if (! $wasAlreadyCompleted) {
+            $this->referrals->rewardCompletedTrade($transaction);
+        }
+
+        return $transaction;
     }
 
     /**
@@ -151,7 +160,9 @@ class TradeService
 
     public function confirmSell(Transaction $transaction, ?User $admin = null): Transaction
     {
-        return DB::transaction(function () use ($transaction, $admin) {
+        $wasAlreadyCompleted = $transaction->fresh()?->status === 'completed';
+
+        $transaction = DB::transaction(function () use ($transaction, $admin) {
             $transaction = Transaction::query()->lockForUpdate()->findOrFail($transaction->id);
 
             if ($transaction->status === 'completed') {
@@ -175,6 +186,12 @@ class TradeService
 
             return $transaction;
         });
+
+        if (! $wasAlreadyCompleted) {
+            $this->referrals->rewardCompletedTrade($transaction);
+        }
+
+        return $transaction;
     }
 
     /**

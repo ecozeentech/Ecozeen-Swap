@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\SystemSetting;
+use App\Services\ReferralService;
 use App\Support\Features;
 use Illuminate\Database\Seeder;
 
@@ -31,5 +32,9 @@ class SystemSettingSeeder extends Seeder
         SystemSetting::set('pwa_short_name', 'EcozeenSwap', 'string', 'pwa');
         SystemSetting::set('pwa_theme_color', '#2563EB', 'string', 'pwa');
         SystemSetting::set('pwa_background_color', '#F8FAFC', 'string', 'pwa');
+        SystemSetting::set('referral_commission_rate', ReferralService::DEFAULT_COMMISSION_RATE, 'string', 'referral');
+        SystemSetting::set('referral_min_withdrawal', ReferralService::DEFAULT_MIN_WITHDRAWAL, 'string', 'referral');
+        SystemSetting::set('referral_signup_bonus_enabled', false, 'boolean', 'referral');
+        SystemSetting::set('referral_signup_bonus_amount', ReferralService::DEFAULT_SIGNUP_BONUS, 'string', 'referral');
     }
 }

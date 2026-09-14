@@ -25,7 +25,7 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): View|RedirectResponse
+    public function create(Request $request): View|RedirectResponse
     {
         if (! Features::isEnabled(Features::REGISTRATION)) {
             return response()->view('coming-soon-guest', [
@@ -34,7 +34,18 @@ class RegisteredUserController extends Controller
             ]);
         }
 
-        return view('auth.register');
+        // Remember a valid referral code across the whole guest session so
+        // it still applies even if the user browses around before actually
+        // submitting the registration form.
+        if ($request->filled('ref') && Features::isEnabled(Features::REFERRALS)) {
+            $code = strtoupper((string) $request->query('ref'));
+
+            if (User::where('referral_code', $code)->exists()) {
+                $request->session()->put('referral_code', $code);
+            }
+        }
+
+        return view('auth.register', ['referrer' => $this->pendingReferrer($request)]);
     }
 
     /**
@@ -64,6 +75,11 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        if ($referrer = $this->pendingReferrer($request)) {
+            $user->update(['referred_by' => $referrer->id]);
+            $request->session()->forget('referral_code');
+        }
+
         $user->assignRole('user');
 
         $this->onboarding->provisionWallets($user);
@@ -84,5 +100,16 @@ class RegisteredUserController extends Controller
         $request->session()->regenerate();
 
         return redirect(route('dashboard', absolute: false));
+    }
+
+    protected function pendingReferrer(Request $request): ?User
+    {
+        if (! Features::isEnabled(Features::REFERRALS)) {
+            return null;
+        }
+
+        $code = $request->session()->get('referral_code');
+
+        return $code ? User::where('referral_code', $code)->first() : null;
     }
 }
