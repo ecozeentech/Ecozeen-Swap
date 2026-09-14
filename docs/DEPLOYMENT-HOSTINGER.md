@@ -311,11 +311,17 @@ query scope, not a scheduled job), but it's good practice to add it anyway for f
      real receiving address for every active crypto asset (e.g. your BTC/ETH/USDT hot wallet).
      Every user sees the same address(es) here; there's no per-user generated address.
    - `/admin/branding` — replace the placeholder logo/favicon with your final artwork if desired
-   - `/admin/settings` — support widget (Tawk.to URL), coming-soon message, gift card buyback %
+   - `/admin/pwa` — the installable app icon, splash icon, app name, and theme/background colors
+     for "Add to Home Screen" — independent from the branding logo/favicon above
+   - `/admin/settings` — support widget (Tawk.to URL), coming-soon message, gift card buyback %,
+     contact phone/email/address shown on the Contact page, default display currency
+   - `/admin/referrals` — the referral program's commission rate and **minimum withdrawal
+     balance**; the program is on by default (toggle it from `/admin/features` if you're not
+     ready to launch it yet)
    - `/admin/features` — disable any feature you're not ready to launch yet
 5. Tell users to add at least one bank account from **Profile → Bank Accounts** before they try
-   to sell crypto or withdraw fiat — both flows require selecting a saved bank account as the
-   settlement destination.
+   to sell crypto, withdraw fiat, or withdraw referral commissions — all three require selecting
+   a saved bank account as the settlement destination.
 
 ---
 
