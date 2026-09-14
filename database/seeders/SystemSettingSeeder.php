@@ -24,5 +24,12 @@ class SystemSettingSeeder extends Seeder
         SystemSetting::set('company_reg_ng', '1835204', 'string', 'branding');
         SystemSetting::set('company_reg_uk', '16582062', 'string', 'branding');
         SystemSetting::set('default_display_currency', 'USD', 'string', 'display');
+        SystemSetting::set('contact_phone', '+1 (555) 010-2024', 'string', 'contact');
+        SystemSetting::set('contact_email', 'support@ecozeenswap.com', 'string', 'contact');
+        SystemSetting::set('contact_address', '150 Crypto Blvd, Suite 400, Financial District, New York, NY 10005', 'string', 'contact');
+        SystemSetting::set('pwa_app_name', config('app.name', 'Ecozeen Swap'), 'string', 'pwa');
+        SystemSetting::set('pwa_short_name', 'EcozeenSwap', 'string', 'pwa');
+        SystemSetting::set('pwa_theme_color', '#2563EB', 'string', 'pwa');
+        SystemSetting::set('pwa_background_color', '#F8FAFC', 'string', 'pwa');
     }
 }

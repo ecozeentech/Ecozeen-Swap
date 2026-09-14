@@ -1,3 +1,8 @@
+@php
+    $contactPhone = \App\Models\SystemSetting::get('contact_phone');
+    $contactEmail = \App\Models\SystemSetting::get('contact_email') ?: 'support@ecozeenswap.com';
+    $contactAddress = \App\Models\SystemSetting::get('contact_address') ?: 'Ecozeen Tech Ltd · Registered in Nigeria (RC 1835204) & the United Kingdom (16582062)';
+@endphp
 <x-public-layout :title="$page?->meta_title ?: ($page?->title ?: 'Contact Us')" :description="$page?->meta_description">
     <section class="max-w-5xl mx-auto px-6 py-16">
         <div class="text-center max-w-2xl mx-auto">
@@ -68,16 +73,25 @@
                             <svg class="h-5 w-5 text-brand-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                             <div>
                                 <p class="font-semibold text-charcoal-900 dark:text-white">Global Headquarters</p>
-                                <p class="text-charcoal-500 dark:text-charcoal-400">Ecozeen Tech Ltd &middot; Registered in Nigeria (RC 1835204) &amp; the United Kingdom (16582062)</p>
+                                <p class="text-charcoal-500 dark:text-charcoal-400">{{ $contactAddress }}</p>
                             </div>
                         </div>
                         <div class="flex gap-3">
                             <svg class="h-5 w-5 text-brand-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                             <div>
                                 <p class="font-semibold text-charcoal-900 dark:text-white">Support Email</p>
-                                <a href="mailto:support@ecozeenswap.com" class="text-brand-600 hover:underline">support@ecozeenswap.com</a>
+                                <a href="mailto:{{ $contactEmail }}" class="text-brand-600 hover:underline">{{ $contactEmail }}</a>
                             </div>
                         </div>
+                        @if ($contactPhone)
+                            <div class="flex gap-3">
+                                <svg class="h-5 w-5 text-brand-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                <div>
+                                    <p class="font-semibold text-charcoal-900 dark:text-white">Phone</p>
+                                    <a href="tel:{{ preg_replace('/[^0-9+]/', '', $contactPhone) }}" class="text-brand-600 hover:underline">{{ $contactPhone }}</a>
+                                </div>
+                            </div>
+                        @endif
                         <div class="flex gap-3">
                             <svg class="h-5 w-5 text-brand-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                             <div>
@@ -91,7 +105,7 @@
                 <div class="rounded-2xl bg-charcoal-50 dark:bg-charcoal-800 p-6">
                     <p class="text-xs font-semibold uppercase tracking-wide text-charcoal-400 mb-3">Connect</p>
                     <div class="flex gap-3">
-                        <a href="mailto:support@ecozeenswap.com" class="h-9 w-9 rounded-full bg-white dark:bg-charcoal-900 flex items-center justify-center text-brand-600 hover:bg-brand-50" aria-label="Email">
+                        <a href="mailto:{{ $contactEmail }}" class="h-9 w-9 rounded-full bg-white dark:bg-charcoal-900 flex items-center justify-center text-brand-600 hover:bg-brand-50" aria-label="Email">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                         </a>
                         <a href="{{ route('support.index') }}" class="h-9 w-9 rounded-full bg-white dark:bg-charcoal-900 flex items-center justify-center text-brand-600 hover:bg-brand-50" aria-label="Live Chat">

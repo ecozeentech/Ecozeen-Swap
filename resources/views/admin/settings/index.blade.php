@@ -16,6 +16,27 @@
                 <textarea name="bank_transfer_memo_notice" rows="2" class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">{{ $settings->get('bank_transfer_memo_notice')?->value }}</textarea>
             </div>
 
+            <div class="rounded-xl border border-charcoal-100 dark:border-charcoal-800 p-4 space-y-4">
+                <div>
+                    <h3 class="font-semibold text-sm text-charcoal-900 dark:text-white">Contact Page Information</h3>
+                    <p class="text-xs text-charcoal-400">Shown on the public Contact Us page. Leave blank to hide a field.</p>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <x-input-label value="Support Phone Number" />
+                        <x-text-input name="contact_phone" value="{{ $settings->get('contact_phone')?->value }}" class="mt-1 w-full" placeholder="+234 800 000 0000" />
+                    </div>
+                    <div>
+                        <x-input-label value="Support Email" />
+                        <x-text-input name="contact_email" type="email" value="{{ $settings->get('contact_email')?->value }}" class="mt-1 w-full" placeholder="support@ecozeenswap.com" />
+                    </div>
+                </div>
+                <div>
+                    <x-input-label value="Office Address" />
+                    <x-text-input name="contact_address" value="{{ $settings->get('contact_address')?->value }}" class="mt-1 w-full" placeholder="150 Crypto Blvd, Suite 400, New York, NY 10005" />
+                </div>
+            </div>
+
             <div>
                 <x-input-label value="Default Display Currency" />
                 <p class="text-xs text-charcoal-400 mb-1">Used on the user dashboard for anyone who hasn't picked their own preferred currency yet.</p>

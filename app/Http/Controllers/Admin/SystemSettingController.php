@@ -30,6 +30,9 @@ class SystemSettingController extends Controller
             'giftcard_buyback_rate' => ['required', 'numeric', 'min:0', 'max:100'],
             'bank_transfer_memo_notice' => ['nullable', 'string', 'max:500'],
             'default_display_currency' => ['required', 'exists:fiat_currencies,code'],
+            'contact_phone' => ['nullable', 'string', 'max:30'],
+            'contact_email' => ['nullable', 'email', 'max:255'],
+            'contact_address' => ['nullable', 'string', 'max:500'],
         ]);
 
         SystemSetting::set('coming_soon_message', $request->input('coming_soon_message', 'This feature is coming soon. Please check back shortly.'), 'string', 'features');
@@ -42,6 +45,9 @@ class SystemSettingController extends Controller
             'Do not reference cryptocurrency or crypto payments in your bank transfer memo/description.'
         ), 'string', 'security');
         SystemSetting::set('default_display_currency', strtoupper($request->input('default_display_currency')), 'string', 'display');
+        SystemSetting::set('contact_phone', $request->input('contact_phone', ''), 'string', 'contact');
+        SystemSetting::set('contact_email', $request->input('contact_email', ''), 'string', 'contact');
+        SystemSetting::set('contact_address', $request->input('contact_address', ''), 'string', 'contact');
 
         ActivityLog::record(auth()->id(), 'admin_updated_system_settings');
 
