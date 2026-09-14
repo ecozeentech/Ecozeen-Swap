@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\GiftCardProductController;
 use App\Http\Controllers\Admin\GiftCardVerificationController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\PaymentGatewayController;
+use App\Http\Controllers\Admin\PwaSettingsController;
 use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\GiftCardController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PwaManifestController;
 use App\Http\Controllers\Security\ActivityLogController;
 use App\Http\Controllers\Security\IpVerificationController;
 use App\Http\Controllers\Security\KycController;
@@ -66,6 +68,11 @@ Route::prefix('blog')->name('blog.')->group(function () {
 });
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
+// Generated live from admin-managed PWA settings — see PwaManifestController.
+// There is deliberately no static public/manifest.json; if one exists the
+// webserver would serve it directly and this route would never run.
+Route::get('/manifest.json', [PwaManifestController::class, 'show'])->name('pwa.manifest');
 
 /*
 |--------------------------------------------------------------------------
@@ -197,6 +204,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::post('/rates', [DailyRateController::class, 'store'])->name('rates.store');
     Route::put('/rates/{dailyRate}', [DailyRateController::class, 'update'])->name('rates.update');
     Route::post('/rates/{dailyRate}/toggle', [DailyRateController::class, 'toggleActive'])->name('rates.toggle');
+    Route::post('/rates/{dailyRate}/renew', [DailyRateController::class, 'renew'])->name('rates.renew');
     Route::delete('/rates/{dailyRate}', [DailyRateController::class, 'destroy'])->name('rates.destroy');
 
     Route::get('/features', [FeatureToggleController::class, 'index'])->name('features.index');
@@ -228,6 +236,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/branding', [BrandingController::class, 'edit'])->name('branding.edit');
     Route::put('/branding', [BrandingController::class, 'update'])->name('branding.update');
     Route::delete('/branding/{key}', [BrandingController::class, 'reset'])->name('branding.reset');
+
+    Route::get('/pwa', [PwaSettingsController::class, 'edit'])->name('pwa.edit');
+    Route::put('/pwa', [PwaSettingsController::class, 'update'])->name('pwa.update');
+    Route::delete('/pwa/{key}', [PwaSettingsController::class, 'reset'])->name('pwa.reset');
 
     Route::get('/pages', [AdminPageController::class, 'index'])->name('pages.index');
     Route::get('/pages/create', [AdminPageController::class, 'create'])->name('pages.create');
