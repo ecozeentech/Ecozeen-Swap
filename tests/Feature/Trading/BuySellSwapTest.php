@@ -5,6 +5,7 @@ namespace Tests\Feature\Trading;
 use App\Models\CryptoAsset;
 use App\Models\FiatCurrency;
 use App\Models\SystemSetting;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Services\RateService;
 use App\Services\TradeService;
@@ -77,6 +78,65 @@ class BuySellSwapTest extends TestCase
 
         $wallet = app(WalletService::class)->getOrCreateWallet($user, 'crypto', 'BTC');
         $this->assertEquals('0.01000000', $wallet->balance);
+
+        // Completing a buy must never create a second Transaction row for
+        // the same order — the original pending "buy" row IS the ledger
+        // entry once it flips to completed.
+        $this->assertSame(1, Transaction::where('user_id', $user->id)->count());
+    }
+
+    public function test_completing_a_sell_does_not_create_a_duplicate_transaction_row(): void
+    {
+        $admin = User::factory()->create();
+        $user = User::factory()->create();
+        app(RateService::class)->setRate($this->btc->id, $this->usd->id, 64000, 65000, 24, $admin);
+
+        $transaction = app(TradeService::class)->initiateSell($user, $this->btc, $this->usd, 0.1, 'bc1qplatformaddress');
+        app(TradeService::class)->confirmSell($transaction, $admin);
+
+        $wallet = app(WalletService::class)->getOrCreateWallet($user, 'fiat', 'USD');
+        $this->assertEquals('6400.00000000', $wallet->balance);
+        $this->assertSame(1, Transaction::where('user_id', $user->id)->count());
+    }
+
+    public function test_submitting_the_same_buy_order_twice_quickly_does_not_create_two_orders(): void
+    {
+        $admin = User::factory()->create();
+        $user = User::factory()->create();
+        app(RateService::class)->setRate($this->btc->id, $this->ngn->id, 64000000, 65000000, 24, $admin);
+
+        $first = app(TradeService::class)->initiateBuy($user, $this->btc, $this->ngn, 650000, 'bank_transfer');
+        $second = app(TradeService::class)->initiateBuy($user, $this->btc, $this->ngn, 650000, 'bank_transfer');
+
+        $this->assertSame($first->id, $second->id);
+        $this->assertSame(1, Transaction::where('user_id', $user->id)->where('type', 'buy')->count());
+    }
+
+    public function test_submitting_the_same_sell_order_twice_quickly_does_not_create_two_orders(): void
+    {
+        $admin = User::factory()->create();
+        $user = User::factory()->create();
+        app(RateService::class)->setRate($this->btc->id, $this->usd->id, 64000, 65000, 24, $admin);
+
+        $first = app(TradeService::class)->initiateSell($user, $this->btc, $this->usd, 0.1, 'bc1qplatformaddress');
+        $second = app(TradeService::class)->initiateSell($user, $this->btc, $this->usd, 0.1, 'bc1qplatformaddress');
+
+        $this->assertSame($first->id, $second->id);
+        $this->assertSame(1, Transaction::where('user_id', $user->id)->where('type', 'sell')->count());
+    }
+
+    public function test_a_second_buy_order_after_the_duplicate_window_passes_is_allowed(): void
+    {
+        $admin = User::factory()->create();
+        $user = User::factory()->create();
+        app(RateService::class)->setRate($this->btc->id, $this->ngn->id, 64000000, 65000000, 24, $admin);
+
+        $first = app(TradeService::class)->initiateBuy($user, $this->btc, $this->ngn, 650000, 'bank_transfer');
+        $this->travel(21)->seconds();
+        $second = app(TradeService::class)->initiateBuy($user, $this->btc, $this->ngn, 650000, 'bank_transfer');
+
+        $this->assertNotSame($first->id, $second->id);
+        $this->assertSame(2, Transaction::where('user_id', $user->id)->where('type', 'buy')->count());
     }
 
     public function test_swap_converts_between_two_crypto_assets_using_usd_cross_rate(): void

@@ -39,7 +39,7 @@
                         </div>
 
                         <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
-                            <form method="POST" action="{{ route('buy.store') }}" class="space-y-4">
+                            <form method="POST" action="{{ route('buy.store') }}" class="space-y-4" x-data="{ submitting: false }" @submit="if (submitting) { $event.preventDefault(); return; } submitting = true">
                                 @csrf
                                 <livewire:buy-calculator />
 
@@ -64,7 +64,10 @@
                                     @enderror
                                 </div>
 
-                                <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg shadow-sm">Execute Buy Order</button>
+                                <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg shadow-sm" :disabled="submitting">
+                                    <svg x-show="submitting" class="animate-spin -ml-1 mr-2 h-4 w-4" style="display:none" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                    <span x-text="submitting ? 'Processing…' : 'Execute Buy Order'"></span>
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -73,7 +76,7 @@
                 @if ($sellEnabled)
                     <div x-show="tab === 'sell'" style="display:none" class="space-y-4">
                         <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
-                            <form method="POST" action="{{ route('sell.store') }}" class="space-y-4">
+                            <form method="POST" action="{{ route('sell.store') }}" class="space-y-4" x-data="{ submitting: false }" @submit="if (submitting) { $event.preventDefault(); return; } submitting = true">
                                 @csrf
                                 <livewire:sell-calculator />
 
@@ -90,7 +93,10 @@
                                     @endif
                                 </div>
 
-                                <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg shadow-sm" @disabled($bankAccounts->isEmpty())>Execute Sell Order</button>
+                                <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-lg shadow-sm" @disabled($bankAccounts->isEmpty()) :disabled="submitting">
+                                    <svg x-show="submitting" class="animate-spin -ml-1 mr-2 h-4 w-4" style="display:none" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                    <span x-text="submitting ? 'Processing…' : 'Execute Sell Order'"></span>
+                                </button>
                             </form>
                         </div>
                     </div>

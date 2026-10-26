@@ -6,6 +6,7 @@ use App\Models\CryptoAsset;
 use App\Models\FiatCurrency;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\Wallet;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -48,6 +49,17 @@ class TradeService
     {
         $quote = $this->quoteBuy($crypto, $fiat, $fiatAmount);
         $usdEquivalent = $this->toUsd($fiatAmount, $fiat);
+
+        // A double-click, a slow network causing the form to be retried, or
+        // the browser "back" button resubmitting the page all produce a
+        // second identical POST within a second or two of the first — this
+        // used to silently create a second pending order for the exact
+        // same purchase. Return the existing one instead of creating a
+        // duplicate.
+        if ($duplicate = $this->findRecentDuplicateOrder($user, 'buy', $crypto->symbol, $quote['crypto_amount'])) {
+            return $duplicate;
+        }
+
         $this->assertWithinDailyLimit($user, $usdEquivalent);
 
         $wallet = $this->wallets->getOrCreateWallet($user, 'crypto', $crypto->symbol);
@@ -83,16 +95,20 @@ class TradeService
                 return $transaction;
             }
 
+            // The "buy" order row created in initiateBuy() IS the ledger
+            // entry for this trade — crediting the wallet via
+            // WalletService::credit() here would create a *second*
+            // Transaction row for the same event (it always inserts one),
+            // which is exactly what showed up as "duplicate" buy orders.
+            // Mutate the wallet balance directly instead, the same way
+            // WalletController::creditDeposit() does for deposits.
             $wallet = $this->wallets->getOrCreateWallet($transaction->user, 'crypto', $transaction->currency_code);
-            $this->wallets->credit($wallet, $transaction->amount, [
-                'type' => 'buy',
-                'currency_code' => $transaction->currency_code,
-                'status' => 'completed',
-                'reference' => Transaction::generateReference('BUYCR'),
-                'metadata' => ['source_transaction' => $transaction->id],
-            ]);
+            $lockedWallet = Wallet::query()->lockForUpdate()->find($wallet->id);
+            $lockedWallet->balance = bcadd((string) $lockedWallet->balance, (string) $transaction->amount, 8);
+            $lockedWallet->save();
 
             $transaction->update([
+                'wallet_id' => $lockedWallet->id,
                 'status' => 'completed',
                 'processed_by' => $admin?->id,
                 'processed_at' => now(),
@@ -134,6 +150,11 @@ class TradeService
     {
         $quote = $this->quoteSell($crypto, $fiat, $cryptoAmount);
         $usdEquivalent = $this->toUsd((float) $quote['fiat_amount'], $fiat);
+
+        if ($duplicate = $this->findRecentDuplicateOrder($user, 'sell', $fiat->code, $quote['fiat_amount'])) {
+            return $duplicate;
+        }
+
         $this->assertWithinDailyLimit($user, $usdEquivalent);
 
         $wallet = $this->wallets->getOrCreateWallet($user, 'fiat', $fiat->code);
@@ -169,16 +190,17 @@ class TradeService
                 return $transaction;
             }
 
+            // Same reasoning as completeBuy(): the "sell" order row already
+            // is the ledger entry, so credit the wallet balance directly
+            // instead of inserting a second Transaction via
+            // WalletService::credit().
             $wallet = $this->wallets->getOrCreateWallet($transaction->user, 'fiat', $transaction->currency_code);
-            $this->wallets->credit($wallet, $transaction->amount, [
-                'type' => 'sell',
-                'currency_code' => $transaction->currency_code,
-                'status' => 'completed',
-                'reference' => Transaction::generateReference('SELLCR'),
-                'metadata' => ['source_transaction' => $transaction->id],
-            ]);
+            $lockedWallet = Wallet::query()->lockForUpdate()->find($wallet->id);
+            $lockedWallet->balance = bcadd((string) $lockedWallet->balance, (string) $transaction->amount, 8);
+            $lockedWallet->save();
 
             $transaction->update([
+                'wallet_id' => $lockedWallet->id,
                 'status' => 'completed',
                 'processed_by' => $admin?->id,
                 'processed_at' => now(),
@@ -272,6 +294,27 @@ class TradeService
 
             return $transaction;
         });
+    }
+
+    /**
+     * Guards against duplicate order creation from a double-click, a
+     * flaky-network form resubmission, or a "back button then resubmit" —
+     * all of which send the exact same POST again within a few seconds.
+     * Looks for a still-pending order of the same type/amount/currency for
+     * this user created in the last 20 seconds and, if found, returns it
+     * instead of letting a second identical order through.
+     */
+    protected function findRecentDuplicateOrder(User $user, string $type, string $currencyCode, string $amount): ?Transaction
+    {
+        return Transaction::query()
+            ->where('user_id', $user->id)
+            ->where('type', $type)
+            ->where('currency_code', $currencyCode)
+            ->where('amount', $amount)
+            ->where('status', 'pending')
+            ->where('created_at', '>=', now()->subSeconds(20))
+            ->latest()
+            ->first();
     }
 
     public function toUsd(float $amount, FiatCurrency $fiat): float
