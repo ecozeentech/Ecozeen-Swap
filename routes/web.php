@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\FeatureToggleController;
 use App\Http\Controllers\Admin\FiatCurrencyController;
 use App\Http\Controllers\Admin\GiftCardProductController;
 use App\Http\Controllers\Admin\GiftCardVerificationController;
+use App\Http\Controllers\Admin\MailSettingsController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\PaymentGatewayController;
 use App\Http\Controllers\Admin\PwaSettingsController;
@@ -259,6 +260,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/branding', [BrandingController::class, 'edit'])->name('branding.edit');
     Route::put('/branding', [BrandingController::class, 'update'])->name('branding.update');
     Route::delete('/branding/{key}', [BrandingController::class, 'reset'])->name('branding.reset');
+
+    Route::get('/mail-settings', [MailSettingsController::class, 'edit'])->name('mail-settings.edit');
+    Route::put('/mail-settings', [MailSettingsController::class, 'update'])->name('mail-settings.update');
+    Route::post('/mail-settings/test', [MailSettingsController::class, 'sendTest'])->name('mail-settings.test');
 
     Route::get('/pwa', [PwaSettingsController::class, 'edit'])->name('pwa.edit');
     Route::put('/pwa', [PwaSettingsController::class, 'update'])->name('pwa.update');

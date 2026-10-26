@@ -49,6 +49,13 @@ class SystemSetting extends Model
     {
         $stored = is_array($value) ? json_encode($value) : (is_bool($value) ? ($value ? '1' : '0') : (string) $value);
 
+        // Credentials (e.g. SMTP password) are encrypted at rest — only
+        // ever decrypted through SystemSetting::get(), never exposed via
+        // raw database access or a backup dump.
+        if ($type === 'encrypted' && $stored !== '') {
+            $stored = encrypt($stored);
+        }
+
         return self::query()->updateOrCreate(
             ['key' => $key],
             ['value' => $stored, 'type' => $type, 'group' => $group]
@@ -61,8 +68,25 @@ class SystemSetting extends Model
             'boolean' => (bool) $value,
             'integer' => (int) $value,
             'json' => json_decode((string) $value, true) ?? [],
+            'encrypted' => self::safeDecrypt($value),
             default => $value,
         };
+    }
+
+    protected static function safeDecrypt(?string $value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        try {
+            return decrypt($value);
+        } catch (\Throwable $e) {
+            // APP_KEY changed, or the value was never actually encrypted
+            // (e.g. seeded directly) — treat it as unset rather than
+            // fatally erroring every page load.
+            return null;
+        }
     }
 
     /**
