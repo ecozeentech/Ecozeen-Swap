@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\CryptoAsset;
 use App\Models\FiatCurrency;
 use App\Models\PaymentGateway;
+use App\Models\SystemSetting;
 use App\Services\FlutterwaveService;
 use App\Services\PaystackService;
 use App\Services\RateService;
@@ -36,6 +37,8 @@ class BuyController extends Controller
             'activeRates' => $this->rates->allActiveRates(),
             'gateways' => PaymentGateway::query()->active()->get(),
             'bankAccounts' => $request->user()->bankAccounts()->active()->get(),
+            'minBuyUsd' => (float) SystemSetting::get('min_buy_amount_usd', 10),
+            'minSellUsd' => (float) SystemSetting::get('min_sell_amount_usd', 10),
         ]);
     }
 
@@ -52,6 +55,13 @@ class BuyController extends Controller
         $user = $request->user();
         $crypto = CryptoAsset::findOrFail($request->input('crypto_asset_id'));
         $fiat = FiatCurrency::findOrFail($request->input('fiat_currency_id'));
+
+        $minBuyUsd = (float) SystemSetting::get('min_buy_amount_usd', 10);
+        $usdAmount = round((float) $request->input('fiat_amount') * (float) $fiat->exchange_rate_to_usd, 2);
+
+        if ($minBuyUsd > 0 && $usdAmount < $minBuyUsd) {
+            return back()->withErrors(['fiat_amount' => 'The minimum buy amount is $'.number_format($minBuyUsd, 2).' USD-equivalent. Please enter a larger amount.']);
+        }
 
         try {
             $transaction = $this->trades->initiateBuy(

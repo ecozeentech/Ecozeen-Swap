@@ -84,6 +84,8 @@ class MobileNavContactRateTest extends TestCase
             'giftcard_buyback_rate' => 75,
             'default_display_currency' => 'USD',
             'contact_phone' => '+1 (555) 123-4567',
+            'min_buy_amount_usd' => 10,
+            'min_sell_amount_usd' => 10,
         ])->assertSessionHasNoErrors();
 
         $this->assertSame('+1 (555) 123-4567', SystemSetting::get('contact_phone'));

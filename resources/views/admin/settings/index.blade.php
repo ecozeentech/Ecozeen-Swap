@@ -52,6 +52,23 @@
                 <x-text-input name="giftcard_buyback_rate" type="number" min="0" max="100" value="{{ $settings->get('giftcard_buyback_rate')?->value ?? 75 }}" class="mt-1 w-full" />
             </div>
 
+            <div class="rounded-xl border border-charcoal-100 dark:border-charcoal-800 p-4 space-y-4">
+                <div>
+                    <h3 class="font-semibold text-sm text-charcoal-900 dark:text-white">Minimum Trade Amounts</h3>
+                    <p class="text-xs text-charcoal-400">Applies to every user on the platform. Set to 0 to disable a minimum.</p>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <x-input-label value="Minimum Buy (USD-equivalent)" />
+                        <x-text-input name="min_buy_amount_usd" type="number" step="0.01" min="0" value="{{ $settings->get('min_buy_amount_usd')?->value ?? 10 }}" class="mt-1 w-full" required />
+                    </div>
+                    <div>
+                        <x-input-label value="Minimum Sell (USD-equivalent)" />
+                        <x-text-input name="min_sell_amount_usd" type="number" step="0.01" min="0" value="{{ $settings->get('min_sell_amount_usd')?->value ?? 10 }}" class="mt-1 w-full" required />
+                    </div>
+                </div>
+            </div>
+
             <div>
                 <x-input-label value="Support Widget" />
                 <select name="support_widget_type" x-model="widgetType" class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">

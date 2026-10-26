@@ -8,6 +8,7 @@ use App\Models\CryptoAsset;
 use App\Models\CryptoWallet;
 use App\Models\FiatCurrency;
 use App\Models\PaymentGateway;
+use App\Models\SystemSetting;
 use App\Models\Transaction;
 use App\Notifications\AdminAlert;
 use App\Services\RateService;
@@ -36,6 +37,8 @@ class SellController extends Controller
             'activeRates' => $this->rates->allActiveRates(),
             'gateways' => PaymentGateway::query()->active()->get(),
             'bankAccounts' => $request->user()->bankAccounts()->active()->get(),
+            'minBuyUsd' => (float) SystemSetting::get('min_buy_amount_usd', 10),
+            'minSellUsd' => (float) SystemSetting::get('min_sell_amount_usd', 10),
         ]);
     }
 
@@ -57,6 +60,20 @@ class SellController extends Controller
 
         if (! $platformWallet) {
             return back()->withErrors(['crypto_asset_id' => "No receiving address has been configured for {$crypto->symbol} yet. Please contact support."]);
+        }
+
+        $minSellUsd = (float) SystemSetting::get('min_sell_amount_usd', 10);
+
+        if ($minSellUsd > 0) {
+            try {
+                $quotedUsdValue = $this->trades->toUsd((float) $this->trades->quoteSell($crypto, $fiat, (float) $request->input('crypto_amount'))['fiat_amount'], $fiat);
+            } catch (RuntimeException $e) {
+                return back()->withErrors(['crypto_amount' => $e->getMessage()]);
+            }
+
+            if ($quotedUsdValue < $minSellUsd) {
+                return back()->withErrors(['crypto_amount' => 'The minimum sell amount is $'.number_format($minSellUsd, 2).' USD-equivalent. Please enter a larger amount.']);
+            }
         }
 
         try {

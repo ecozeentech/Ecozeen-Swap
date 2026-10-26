@@ -41,6 +41,9 @@
                         <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
                             <form method="POST" action="{{ route('buy.store') }}" class="space-y-4" x-data="{ submitting: false }" @submit="if (submitting) { $event.preventDefault(); return; } submitting = true">
                                 @csrf
+                                @if ($minBuyUsd > 0)
+                                    <p class="text-xs text-charcoal-400">Minimum buy: <strong class="text-charcoal-600 dark:text-charcoal-300">${{ number_format($minBuyUsd, 2) }}</strong> USD-equivalent.</p>
+                                @endif
                                 <livewire:buy-calculator />
 
                                 <div>
@@ -78,6 +81,9 @@
                         <div class="rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
                             <form method="POST" action="{{ route('sell.store') }}" class="space-y-4" x-data="{ submitting: false }" @submit="if (submitting) { $event.preventDefault(); return; } submitting = true">
                                 @csrf
+                                @if ($minSellUsd > 0)
+                                    <p class="text-xs text-charcoal-400">Minimum sell: <strong class="text-charcoal-600 dark:text-charcoal-300">${{ number_format($minSellUsd, 2) }}</strong> USD-equivalent.</p>
+                                @endif
                                 <livewire:sell-calculator />
 
                                 <div>

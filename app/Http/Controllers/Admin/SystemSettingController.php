@@ -33,6 +33,8 @@ class SystemSettingController extends Controller
             'contact_phone' => ['nullable', 'string', 'max:30'],
             'contact_email' => ['nullable', 'email', 'max:255'],
             'contact_address' => ['nullable', 'string', 'max:500'],
+            'min_buy_amount_usd' => ['required', 'numeric', 'min:0'],
+            'min_sell_amount_usd' => ['required', 'numeric', 'min:0'],
         ]);
 
         SystemSetting::set('coming_soon_message', $request->input('coming_soon_message', 'This feature is coming soon. Please check back shortly.'), 'string', 'features');
@@ -48,6 +50,8 @@ class SystemSettingController extends Controller
         SystemSetting::set('contact_phone', $request->input('contact_phone', ''), 'string', 'contact');
         SystemSetting::set('contact_email', $request->input('contact_email', ''), 'string', 'contact');
         SystemSetting::set('contact_address', $request->input('contact_address', ''), 'string', 'contact');
+        SystemSetting::set('min_buy_amount_usd', $request->input('min_buy_amount_usd'), 'string', 'trading');
+        SystemSetting::set('min_sell_amount_usd', $request->input('min_sell_amount_usd'), 'string', 'trading');
 
         ActivityLog::record(auth()->id(), 'admin_updated_system_settings');
 

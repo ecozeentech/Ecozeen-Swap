@@ -36,5 +36,7 @@ class SystemSettingSeeder extends Seeder
         SystemSetting::set('referral_min_withdrawal', ReferralService::DEFAULT_MIN_WITHDRAWAL, 'string', 'referral');
         SystemSetting::set('referral_signup_bonus_enabled', false, 'boolean', 'referral');
         SystemSetting::set('referral_signup_bonus_amount', ReferralService::DEFAULT_SIGNUP_BONUS, 'string', 'referral');
+        SystemSetting::set('min_buy_amount_usd', 10, 'string', 'trading');
+        SystemSetting::set('min_sell_amount_usd', 10, 'string', 'trading');
     }
 }

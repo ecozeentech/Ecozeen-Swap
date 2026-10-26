@@ -171,6 +171,8 @@ class RatesTogglesCurrencyTest extends TestCase
             'support_widget_type' => 'none',
             'giftcard_buyback_rate' => 75,
             'default_display_currency' => 'NGN',
+            'min_buy_amount_usd' => 10,
+            'min_sell_amount_usd' => 10,
         ])->assertSessionHasNoErrors();
 
         $this->assertSame('NGN', SystemSetting::get('default_display_currency'));
