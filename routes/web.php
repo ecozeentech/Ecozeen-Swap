@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\PaymentGatewayController;
 use App\Http\Controllers\Admin\PwaSettingsController;
 use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
 use App\Http\Controllers\Admin\ReferralWithdrawalController as AdminReferralWithdrawalController;
+use App\Http\Controllers\Admin\SecureFileController;
 use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
@@ -223,6 +224,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/transactions/{transaction}', [AdminTransactionController::class, 'show'])->name('transactions.show');
     Route::post('/transactions/{transaction}/mark-paid', [AdminTransactionController::class, 'markPaid'])->name('transactions.mark-paid');
     Route::post('/transactions/{transaction}/confirm-sell', [AdminTransactionController::class, 'confirmSell'])->name('transactions.confirm-sell');
+    Route::post('/transactions/{transaction}/approve-withdrawal', [AdminTransactionController::class, 'approveWithdrawal'])->name('transactions.approve-withdrawal');
+
+    Route::get('/files/{type}/{id}', [SecureFileController::class, 'show'])->name('files.show');
     Route::post('/transactions/{transaction}/reject', [AdminTransactionController::class, 'reject'])->name('transactions.reject');
 
     Route::get('/giftcard-products', [GiftCardProductController::class, 'index'])->name('giftcard-products.index');

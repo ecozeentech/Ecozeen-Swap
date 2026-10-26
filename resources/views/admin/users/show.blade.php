@@ -134,7 +134,10 @@
                         <div class="px-5 py-3 flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-semibold capitalize">{{ str_replace('_', ' ', $doc->document_type) }}</p>
-                                <p class="text-xs text-charcoal-400">{{ $doc->created_at->diffForHumans() }}</p>
+                                <p class="text-xs text-charcoal-400">
+                                    {{ $doc->created_at->diffForHumans() }}
+                                    &middot; <a href="{{ route('admin.files.show', ['type' => 'kyc-document', 'id' => $doc->id]) }}" target="_blank" class="font-semibold text-brand-600 hover:underline">View document</a>
+                                </p>
                             </div>
                             @if ($doc->status === 'pending')
                                 <div class="flex gap-2">

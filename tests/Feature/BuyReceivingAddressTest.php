@@ -103,7 +103,7 @@ class BuyReceivingAddressTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.transactions.show', $transaction));
 
         $response->assertOk();
-        $response->assertSee('Deliver externally to');
+        $response->assertSee('Destination Wallet');
         $response->assertSee('bc1qexternaladdressexample');
     }
 }

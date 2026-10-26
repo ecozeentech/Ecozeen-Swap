@@ -6,7 +6,7 @@
             <thead class="text-left text-charcoal-400 text-xs uppercase">
                 <tr>
                     <th class="px-5 py-3">User</th>
-                    <th class="px-5 py-3">Card</th>
+                    <th class="px-5 py-3">Card Details</th>
                     <th class="px-5 py-3">Face Value</th>
                     <th class="px-5 py-3">Payout</th>
                     <th class="px-5 py-3">Status</th>
@@ -17,7 +17,13 @@
                 @foreach ($giftCards as $card)
                     <tr>
                         <td class="px-5 py-3">{{ $card->user->username ?? 'N/A' }}</td>
-                        <td class="px-5 py-3">{{ $card->card_type }} &middot; {{ $card->maskedCardNumber() }}</td>
+                        <td class="px-5 py-3">
+                            <p class="font-semibold">{{ $card->card_type }}</p>
+                            <p class="text-xs font-mono text-charcoal-500">#{{ $card->card_number_hashed }} @if ($card->pin) &middot; PIN {{ $card->pin }} @endif</p>
+                            @if ($card->card_image)
+                                <a href="{{ route('admin.files.show', ['type' => 'gift-card-image', 'id' => $card->id]) }}" target="_blank" class="text-xs font-semibold text-brand-600 hover:underline">View photo →</a>
+                            @endif
+                        </td>
                         <td class="px-5 py-3">{{ number_format($card->face_value, 2) }} {{ $card->face_value_currency }}</td>
                         <td class="px-5 py-3">{{ number_format($card->selling_price, 2) }} {{ $card->payout_currency }}</td>
                         <td class="px-5 py-3">
