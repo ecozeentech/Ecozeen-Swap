@@ -31,9 +31,15 @@ class DashboardStats extends Component
         $portfolioUsd = 0;
 
         foreach ($wallets as $wallet) {
+            // Funds already committed to a pending withdrawal aren't part
+            // of what the user actually has to trade/spend anymore, so the
+            // portfolio total (like every other balance figure) uses the
+            // available balance, not the raw one.
+            $available = (float) $wallet->availableBalance();
+
             if ($wallet->currency_type === 'fiat') {
                 $fiat = FiatCurrency::query()->where('code', $wallet->currency_code)->first();
-                $portfolioUsd += (float) $wallet->balance * (float) ($fiat?->exchange_rate_to_usd ?? 0);
+                $portfolioUsd += $available * (float) ($fiat?->exchange_rate_to_usd ?? 0);
 
                 continue;
             }
@@ -42,7 +48,7 @@ class DashboardStats extends Component
             if ($asset && $usd) {
                 $rate = $rates->activeRate($asset->id, $usd->id);
                 if ($rate) {
-                    $portfolioUsd += (float) $wallet->balance * (float) $rate->buy_rate;
+                    $portfolioUsd += $available * (float) $rate->buy_rate;
                 }
             }
         }

@@ -4,7 +4,10 @@
     <div class="max-w-lg mx-auto rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-6 shadow-sm">
         <h2 class="text-lg font-bold text-charcoal-900 dark:text-white mb-4">Withdraw Funds</h2>
 
-        <form method="POST" action="{{ route('wallet.withdraw.store') }}" x-data="{ type: 'fiat' }" class="space-y-4">
+        @php
+            $availableByCode = $wallets->mapWithKeys(fn ($wallet) => [$wallet->currency_code => (float) $wallet->availableBalance()]);
+        @endphp
+        <form method="POST" action="{{ route('wallet.withdraw.store') }}" x-data="{ type: 'fiat', currency: '{{ $fiatCurrencies->first()?->code }}', available: {{ $availableByCode->toJson() }} }" class="space-y-4">
             @csrf
             <div>
                 <x-input-label value="Withdraw" />
@@ -22,7 +25,7 @@
 
             <div>
                 <x-input-label for="currency_code" value="Currency" />
-                <select id="currency_code" name="currency_code" required class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
+                <select id="currency_code" name="currency_code" x-model="currency" required class="mt-1 w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
                     <template x-if="type === 'fiat'">
                         <template x-for="fiat in {{ $fiatCurrencies->pluck('code')->toJson() }}">
                             <option :value="fiat" x-text="fiat"></option>
@@ -34,11 +37,12 @@
                         </template>
                     </template>
                 </select>
+                <p class="mt-1 text-xs text-charcoal-400">Available to withdraw: <span class="font-semibold text-charcoal-600 dark:text-charcoal-300" x-text="(available[currency] ?? 0).toLocaleString(undefined, { maximumFractionDigits: 8 })"></span> <span x-text="currency"></span></p>
             </div>
 
             <div>
                 <x-input-label for="amount" value="Amount" />
-                <x-text-input id="amount" name="amount" type="number" step="0.00000001" min="0.00000001" required class="mt-1 w-full" />
+                <x-text-input id="amount" name="amount" type="number" step="0.00000001" min="0.00000001" x-bind:max="available[currency] ?? null" required class="mt-1 w-full" />
                 <x-input-error :messages="$errors->get('amount')" class="mt-2" />
             </div>
 

@@ -121,7 +121,10 @@
                     @foreach ($user->wallets as $wallet)
                         <div class="rounded-xl bg-charcoal-50 dark:bg-charcoal-800 px-4 py-3">
                             <p class="text-xs text-charcoal-400">{{ $wallet->currency_code }}</p>
-                            <p class="font-bold">{{ number_format($wallet->balance, 6) }}</p>
+                            <p class="font-bold">{{ number_format($wallet->availableBalance(), 6) }} <span class="text-xs font-normal text-charcoal-400">available</span></p>
+                            @if ((float) $wallet->reserved_balance > 0)
+                                <p class="text-[11px] text-amber-500">{{ number_format($wallet->reserved_balance, 6) }} reserved (pending withdrawal)</p>
+                            @endif
                         </div>
                     @endforeach
                 </div>
