@@ -88,6 +88,7 @@ class SellController extends Controller
                     'settlement_bank_account_id' => $bankAccount->id,
                     'settlement_bank_name' => $bankAccount->bank_name,
                     'settlement_account_name' => $bankAccount->account_name,
+                    'settlement_account_number' => (string) $bankAccount->account_number,
                 ]
             );
         } catch (RuntimeException $e) {

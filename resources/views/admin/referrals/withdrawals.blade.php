@@ -35,7 +35,9 @@
                         <td class="px-5 py-3 font-semibold">${{ number_format($withdrawal->amount, 2) }}</td>
                         <td class="px-5 py-3 text-charcoal-400">
                             @if ($withdrawal->bankAccount)
-                                {{ $withdrawal->bankAccount->bank_name }} &middot; {{ $withdrawal->bankAccount->maskedAccountNumber() }}
+                                <p class="font-semibold">{{ $withdrawal->bankAccount->bank_name }}</p>
+                                <p class="text-xs text-charcoal-400">{{ $withdrawal->bankAccount->account_name }}</p>
+                                <p class="font-mono text-xs">{{ $withdrawal->bankAccount->account_number }}</p>
                             @else
                                 <span class="text-red-500">Bank account deleted</span>
                             @endif

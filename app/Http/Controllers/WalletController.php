@@ -261,6 +261,11 @@ class WalletController extends Controller
                 'bank_account_id' => $bankAccount->id,
                 'bank_name' => $bankAccount->bank_name,
                 'account_name' => $bankAccount->account_name,
+                // The full account number — not just the last 4 — so
+                // admins can actually process the transfer from the order
+                // page without having to go dig through the user's saved
+                // bank accounts separately.
+                'account_number' => (string) $bankAccount->account_number,
                 'account_number_last4' => substr((string) $bankAccount->account_number, -4),
             ];
         }

@@ -104,15 +104,40 @@
                         <p class="mt-2 text-xs text-charcoal-400">The user asked for this purchase to be sent to the address above instead of held in their Ecozeen Swap wallet. Send it manually from platform reserves once payment is confirmed, then mark this order paid.</p>
                     @endif
                 @elseif ($bankDetails)
-                    <div class="rounded-xl bg-charcoal-50 dark:bg-charcoal-800 p-4 flex items-center gap-3">
+                    @php
+                        $accountNumber = $transaction->metadata['account_number'] ?? ($transaction->metadata['settlement_account_number'] ?? null);
+                        $accountName = $transaction->metadata['settlement_account_name'] ?? ($transaction->metadata['account_name'] ?? '');
+                    @endphp
+                    <div class="rounded-xl bg-charcoal-50 dark:bg-charcoal-800 p-4 flex items-center gap-3 mb-3">
                         <div class="h-9 w-9 rounded-lg bg-white dark:bg-charcoal-900 flex items-center justify-center flex-shrink-0 shadow-sm">
                             <svg class="h-4.5 w-4.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M4 10h16M4 10V6l8-4 8 4v4M6 10v11M10 10v11M14 10v11M18 10v11" /></svg>
                         </div>
                         <div>
                             <p class="font-semibold text-charcoal-900 dark:text-white">{{ $bankDetails }}</p>
-                            <p class="text-xs text-charcoal-400">{{ $transaction->metadata['settlement_account_name'] ?? ($transaction->metadata['account_name'] ?? '') }} &middot; ****{{ $transaction->metadata['account_number_last4'] ?? '' }}</p>
+                            <p class="text-xs text-charcoal-400">{{ $accountName }}</p>
                         </div>
                     </div>
+
+                    @if ($accountNumber)
+                        <div x-data="{ copied: false, copy() { navigator.clipboard.writeText('{{ $accountNumber }}'); this.copied = true; setTimeout(() => this.copied = false, 1500); } }"
+                             class="rounded-xl bg-charcoal-900 dark:bg-black p-4 flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                                    <svg class="h-4.5 w-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[11px] text-white/50 uppercase tracking-wide">Account Number</p>
+                                    <p class="font-mono text-sm text-white truncate" title="{{ $accountNumber }}">{{ $accountNumber }}</p>
+                                </div>
+                            </div>
+                            <button type="button" @click="copy()" class="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition">
+                                <span x-show="!copied">Copy</span>
+                                <span x-show="copied" style="display:none">Copied!</span>
+                            </button>
+                        </div>
+                    @else
+                        <p class="text-xs text-amber-500">This order was placed before full account numbers were recorded — only the last 4 digits (****{{ $transaction->metadata['account_number_last4'] ?? '????' }}) are available. Ask the user to confirm their account details directly.</p>
+                    @endif
                 @endif
             </div>
         @endif
