@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\User;
 use App\Support\Notify;
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -32,7 +33,13 @@ class AdminAlert extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        // Admins need to know about new orders/withdrawals/KYC submissions
+        // immediately, not only the next time they happen to open the
+        // admin panel and check the bell — so this goes to email too.
+        // Notify::send() already swallows any mail delivery failure (see
+        // its docblock), so a broken/unset SMTP config never blocks the
+        // action that triggered this alert.
+        return ['database', 'mail'];
     }
 
     public function toArray(object $notifiable): array
@@ -43,6 +50,20 @@ class AdminAlert extends Notification
             'level' => $this->level,
             'url' => $this->url,
         ];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $mail = (new MailMessage)
+            ->subject('['.config('app.name').'] '.$this->title)
+            ->greeting($this->title)
+            ->line($this->message);
+
+        if ($this->url) {
+            $mail->action('Review in Admin Panel', $this->url);
+        }
+
+        return $mail;
     }
 
     /**
