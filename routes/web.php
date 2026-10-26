@@ -293,6 +293,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::delete('/crypto-wallets/{cryptoWallet}', [AdminCryptoWalletController::class, 'destroy'])->name('crypto-wallets.destroy');
 
     Route::get('/contact-messages', [AdminContactMessageController::class, 'index'])->name('contact-messages.index');
+    Route::post('/contact-messages/bulk', [AdminContactMessageController::class, 'bulk'])->name('contact-messages.bulk');
     Route::get('/contact-messages/{contactMessage}', [AdminContactMessageController::class, 'show'])->name('contact-messages.show');
     Route::post('/contact-messages/{contactMessage}/replied', [AdminContactMessageController::class, 'markReplied'])->name('contact-messages.mark-replied');
     Route::delete('/contact-messages/{contactMessage}', [AdminContactMessageController::class, 'destroy'])->name('contact-messages.destroy');

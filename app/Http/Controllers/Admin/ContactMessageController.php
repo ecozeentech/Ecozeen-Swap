@@ -46,4 +46,31 @@ class ContactMessageController extends Controller
 
         return redirect()->route('admin.contact-messages.index')->with('status', 'message-deleted');
     }
+
+    public function bulk(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'action' => ['required', 'in:mark-read,mark-replied,delete'],
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:contact_messages,id'],
+        ]);
+
+        $ids = $request->input('ids');
+
+        match ($request->input('action')) {
+            'mark-read' => ContactMessage::query()->whereIn('id', $ids)->update(['status' => 'read']),
+            'mark-replied' => ContactMessage::query()->whereIn('id', $ids)->update(['status' => 'replied']),
+            'delete' => ContactMessage::query()->whereIn('id', $ids)->delete(),
+        };
+
+        ActivityLog::record(auth()->id(), 'admin_bulk_'.str_replace('-', '_', $request->input('action')).'_contact_messages', ['ids' => $ids, 'count' => count($ids)]);
+
+        $statusKey = match ($request->input('action')) {
+            'mark-read' => 'messages-marked-read',
+            'mark-replied' => 'messages-marked-replied',
+            'delete' => 'messages-deleted',
+        };
+
+        return redirect()->route('admin.contact-messages.index')->with('status', $statusKey);
+    }
 }
