@@ -25,6 +25,7 @@ class UserManagementController extends Controller
                 });
             })
             ->when($request->input('kyc_status'), fn ($query, $status) => $query->where('kyc_status', $status))
+            ->when($request->boolean('suspended'), fn ($query) => $query->where('is_suspended', true))
             ->latest()
             ->paginate(15)
             ->withQueryString();
