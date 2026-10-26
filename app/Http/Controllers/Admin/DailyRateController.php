@@ -16,12 +16,9 @@ class DailyRateController extends Controller
 
     public function index(): View
     {
-        return view('admin.rates.index', [
-            'cryptoAssets' => $this->rates->cryptoAssets(),
-            'fiatCurrencies' => $this->rates->fiatCurrencies(),
-            'activeRates' => $this->rates->allActiveRates(),
-            'history' => DailyRate::query()->with(['cryptoAsset', 'fiatCurrency', 'createdBy'])->latest()->limit(30)->get(),
-        ]);
+        // The actual rate data is now rendered by the self-refreshing
+        // livewire.admin.daily-rates-panel component.
+        return view('admin.rates.index');
     }
 
     public function store(Request $request): RedirectResponse
@@ -31,7 +28,9 @@ class DailyRateController extends Controller
             'fiat_currency_id' => ['required', 'exists:fiat_currencies,id'],
             'buy_rate' => ['required', 'numeric', 'min:0'],
             'sell_rate' => ['required', 'numeric', 'min:0', 'gte:buy_rate'],
-            'hours_valid' => ['nullable', 'integer', 'min:1', 'max:168'],
+            // No upper bound: admins can set a rate to run for as many
+            // days as they want instead of being capped at one week.
+            'hours_valid' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $rate = $this->rates->setRate(
@@ -117,7 +116,7 @@ class DailyRateController extends Controller
     public function renew(Request $request, DailyRate $dailyRate): RedirectResponse
     {
         $request->validate([
-            'hours_valid' => ['nullable', 'integer', 'min:1', 'max:168'],
+            'hours_valid' => ['nullable', 'integer', 'min:1'],
             'buy_rate' => ['nullable', 'numeric', 'min:0'],
             'sell_rate' => ['nullable', 'numeric', 'min:0'],
         ]);

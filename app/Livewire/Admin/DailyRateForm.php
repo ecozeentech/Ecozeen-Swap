@@ -59,7 +59,7 @@ class DailyRateForm extends Component
             'fiatCurrencyId' => ['required', 'exists:fiat_currencies,id'],
             'buyRate' => ['required', 'numeric', 'min:0'],
             'sellRate' => ['required', 'numeric', 'min:0', 'gte:buyRate'],
-            'hoursValid' => ['required', 'integer', 'min:1', 'max:168'],
+            'hoursValid' => ['required', 'integer', 'min:1'],
         ]);
 
         $rate = app(RateService::class)->setRate(

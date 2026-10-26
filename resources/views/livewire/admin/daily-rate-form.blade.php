@@ -51,7 +51,14 @@
 
         <div>
             <label class="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1">Valid For (hours)</label>
-            <input type="number" wire:model="hoursValid" min="1" max="168" class="w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
+            <input type="number" wire:model="hoursValid" min="1" class="w-full rounded-lg border-charcoal-200 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-white focus:border-brand-500 focus:ring-brand-500">
+            <div class="flex gap-1.5 mt-2 flex-wrap">
+                @foreach ([['24', '1 day'], ['72', '3 days'], ['168', '7 days'], ['720', '30 days'], ['2160', '90 days'], ['8760', '1 year']] as [$hours, $label])
+                    <button type="button" wire:click="$set('hoursValid', {{ $hours }})" class="text-[11px] font-semibold px-2.5 py-1 rounded-full border {{ (string) $hoursValid === $hours ? 'bg-brand-500 text-white border-brand-500' : 'border-charcoal-200 dark:border-charcoal-700 text-charcoal-500 hover:border-brand-400' }}">{{ $label }}</button>
+                @endforeach
+            </div>
+            <p class="text-[11px] text-charcoal-400 mt-1">No upper limit — enter any number of hours, e.g. type a larger value for a longer run.</p>
+            @error('hoursValid') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
         </div>
 
         <div class="sm:col-span-2 flex justify-end">
