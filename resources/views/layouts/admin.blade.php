@@ -23,10 +23,10 @@
                         <span class="font-bold">Admin Panel</span>
                     </a>
                 </div>
-                <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1 text-charcoal-300">
+                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 text-charcoal-300">
                     @include('partials.admin-nav-items')
                 </nav>
-                <div class="p-3 border-t border-charcoal-800 space-y-1">
+                <div class="flex-shrink-0 p-3 border-t border-charcoal-800 space-y-1">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-charcoal-300 hover:bg-charcoal-800">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                         Exit to App
@@ -42,15 +42,15 @@
             </aside>
 
             <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-black/50 lg:hidden" @click="sidebarOpen = false" style="display:none"></div>
-            <aside x-show="sidebarOpen" x-transition class="fixed inset-y-0 left-0 z-50 w-72 bg-charcoal-900 lg:hidden" style="display:none">
-                <div class="h-16 flex items-center justify-between px-6 border-b border-charcoal-800 text-white">
+            <aside x-show="sidebarOpen" x-transition class="fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-charcoal-900 lg:hidden" style="display:none">
+                <div class="h-16 flex-shrink-0 flex items-center justify-between px-6 border-b border-charcoal-800 text-white">
                     <span class="font-bold">Admin Panel</span>
                     <button @click="sidebarOpen = false" class="text-charcoal-400"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
                 </div>
-                <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1 text-charcoal-300" @click="sidebarOpen = false">
+                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 text-charcoal-300" @click="sidebarOpen = false">
                     @include('partials.admin-nav-items')
                 </nav>
-                <div class="p-3 border-t border-charcoal-800 space-y-1">
+                <div class="flex-shrink-0 p-3 border-t border-charcoal-800 space-y-1">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-charcoal-300 hover:bg-charcoal-800">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                         Exit to App

@@ -48,6 +48,25 @@ class CryptoAsset extends Model
             return $this->logo;
         }
 
-        return $this->logo ? asset('storage/'.$this->logo) : asset('images/crypto-placeholder.svg');
+        if ($this->logo) {
+            return asset('storage/'.$this->logo);
+        }
+
+        return self::bundledLogoUrl($this->symbol) ?? asset('images/crypto-placeholder.svg');
+    }
+
+    /**
+     * A small set of bundled, brand-colored icons for well-known coins
+     * (BTC, ETH, USDT, BNB, etc.) so a newly added asset — or one an
+     * admin just hasn't gotten around to uploading a logo for yet —
+     * shows something recognizable instead of the generic grey
+     * placeholder. Purely a fallback: an admin-uploaded logo (set via
+     * Admin > Crypto Assets) always takes priority over this.
+     */
+    public static function bundledLogoUrl(string $symbol): ?string
+    {
+        $path = 'images/crypto/'.strtolower($symbol).'.svg';
+
+        return file_exists(public_path($path)) ? asset($path) : null;
     }
 }

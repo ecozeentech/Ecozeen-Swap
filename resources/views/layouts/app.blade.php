@@ -25,10 +25,10 @@
                 <div class="h-16 flex items-center px-6 border-b border-charcoal-100 dark:border-charcoal-800">
                     <a href="{{ route('dashboard') }}"><x-application-logo class="h-9 w-9" /></a>
                 </div>
-                <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1">
                     @include('partials.nav-items')
                 </nav>
-                <div class="p-3 border-t border-charcoal-100 dark:border-charcoal-800">
+                <div class="flex-shrink-0 p-3 border-t border-charcoal-100 dark:border-charcoal-800">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-charcoal-600 dark:text-charcoal-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20">
@@ -41,15 +41,15 @@
 
             <!-- Mobile Sidebar Drawer -->
             <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-black/50 lg:hidden" @click="sidebarOpen = false" style="display:none"></div>
-            <aside x-show="sidebarOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-charcoal-900 shadow-xl lg:hidden" style="display:none">
-                <div class="h-16 flex items-center justify-between px-6 border-b border-charcoal-100 dark:border-charcoal-800">
+            <aside x-show="sidebarOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-white dark:bg-charcoal-900 shadow-xl lg:hidden" style="display:none">
+                <div class="h-16 flex-shrink-0 flex items-center justify-between px-6 border-b border-charcoal-100 dark:border-charcoal-800">
                     <x-application-logo class="h-9 w-9" />
                     <button @click="sidebarOpen = false" class="text-charcoal-400"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
                 </div>
-                <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" @click="sidebarOpen = false">
+                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1" @click="sidebarOpen = false">
                     @include('partials.nav-items')
                 </nav>
-                <div class="p-3 border-t border-charcoal-100 dark:border-charcoal-800">
+                <div class="flex-shrink-0 p-3 border-t border-charcoal-100 dark:border-charcoal-800">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-charcoal-600 dark:text-charcoal-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20">
