@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\PwaSettingsController;
 use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
 use App\Http\Controllers\Admin\ReferralWithdrawalController as AdminReferralWithdrawalController;
 use App\Http\Controllers\Admin\SecureFileController;
+use App\Http\Controllers\Admin\SiteContentController;
 use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
@@ -268,6 +269,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/pwa', [PwaSettingsController::class, 'edit'])->name('pwa.edit');
     Route::put('/pwa', [PwaSettingsController::class, 'update'])->name('pwa.update');
     Route::delete('/pwa/{key}', [PwaSettingsController::class, 'reset'])->name('pwa.reset');
+
+    Route::get('/site-content/{group?}', [SiteContentController::class, 'edit'])->name('site-content.edit');
+    Route::put('/site-content/{group}', [SiteContentController::class, 'update'])->name('site-content.update');
+    Route::delete('/site-content/{group}', [SiteContentController::class, 'reset'])->name('site-content.reset');
 
     Route::get('/pages', [AdminPageController::class, 'index'])->name('pages.index');
     Route::get('/pages/create', [AdminPageController::class, 'create'])->name('pages.create');

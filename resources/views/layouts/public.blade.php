@@ -31,10 +31,10 @@
                     </button>
                     <div class="hidden md:flex items-center gap-2">
                         @auth
-                            <a href="{{ route('dashboard') }}" class="text-sm font-semibold px-4 py-2 rounded-lg bg-brand-500 text-white hover:bg-brand-600">Dashboard</a>
+                            <a href="{{ route('dashboard') }}" class="text-sm font-semibold px-4 py-2 rounded-lg bg-brand-500 text-white hover:bg-brand-600">{{ \App\Support\SiteContent::data('navigation', 'labels')['dashboard'] }}</a>
                         @else
-                            <a href="{{ route('login') }}" class="text-sm font-semibold text-charcoal-600 dark:text-charcoal-300 hover:text-brand-600 px-3">Log in</a>
-                            <a href="{{ route('register') }}" class="text-sm font-semibold px-4 py-2 rounded-lg bg-brand-500 text-white hover:bg-brand-600">Get Started</a>
+                            <a href="{{ route('login') }}" class="text-sm font-semibold text-charcoal-600 dark:text-charcoal-300 hover:text-brand-600 px-3">{{ \App\Support\SiteContent::data('navigation', 'labels')['login'] }}</a>
+                            <a href="{{ route('register') }}" class="text-sm font-semibold px-4 py-2 rounded-lg bg-brand-500 text-white hover:bg-brand-600">{{ \App\Support\SiteContent::data('navigation', 'labels')['register'] }}</a>
                         @endauth
                     </div>
                     <button type="button" @click="mobileNavOpen = !mobileNavOpen" class="md:hidden rounded-lg p-2 text-charcoal-500 hover:bg-charcoal-100 dark:hover:bg-charcoal-800" aria-label="Toggle menu">

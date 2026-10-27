@@ -25,7 +25,7 @@
                 <div class="h-16 flex items-center px-6 border-b border-charcoal-100 dark:border-charcoal-800">
                     <a href="{{ route('dashboard') }}"><x-application-logo class="h-9 w-9" /></a>
                 </div>
-                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1">
+                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1" style="min-height:0">
                     @include('partials.nav-items')
                 </nav>
                 <div class="flex-shrink-0 p-3 border-t border-charcoal-100 dark:border-charcoal-800">
@@ -46,7 +46,7 @@
                     <x-application-logo class="h-9 w-9" />
                     <button @click="sidebarOpen = false" class="text-charcoal-400"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
                 </div>
-                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1" @click="sidebarOpen = false">
+                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1" style="min-height:0" @click="sidebarOpen = false">
                     @include('partials.nav-items')
                 </nav>
                 <div class="flex-shrink-0 p-3 border-t border-charcoal-100 dark:border-charcoal-800">

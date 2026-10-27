@@ -29,6 +29,7 @@ $sectionLabel = fn ($label) => "<p class=\"px-3 pt-4 pb-1 text-[11px] font-semib
 {!! $adminLink('admin.giftcards.index', 'Verify Submissions', '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />') !!}
 
 {!! $sectionLabel('Content') !!}
+{!! $adminLink('admin.site-content.edit', 'Site Content', '<path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16M4 12h16M4 19h10" />') !!}
 {!! $adminLink('admin.pages.index', 'Pages', '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />') !!}
 {!! $adminLink('admin.blog.posts.index', 'Blog Posts', '<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />') !!}
 {!! $adminLink('admin.blog.categories.index', 'Blog Categories', '<path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />') !!}

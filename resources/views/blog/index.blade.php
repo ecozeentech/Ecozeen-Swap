@@ -1,15 +1,20 @@
-<x-public-layout title="Blog" description="Insights, product updates, and market notes from the Ecozeen Swap team.">
+@php($blogHeader = \App\Support\SiteContent::data('blog', 'header'))
+<x-public-layout :title="$blogHeader['meta_title']" :description="$blogHeader['description']">
     <section class="max-w-6xl mx-auto px-6 py-16">
         <div class="text-center max-w-2xl mx-auto">
-            <span class="inline-flex items-center gap-2 rounded-full bg-brand-50 dark:bg-charcoal-800 text-brand-700 dark:text-brand-400 text-xs font-semibold px-3 py-1">Blog</span>
+            @if ($blogHeader['badge'] !== '')
+                <span class="inline-flex items-center gap-2 rounded-full bg-brand-50 dark:bg-charcoal-800 text-brand-700 dark:text-brand-400 text-xs font-semibold px-3 py-1">{{ $blogHeader['badge'] }}</span>
+            @endif
             <h1 class="mt-4 text-3xl sm:text-4xl font-extrabold text-charcoal-900 dark:text-white">
-                @isset($activeCategory) {{ $activeCategory->name }} @else Insights &amp; Updates @endisset
+                @isset($activeCategory) {{ $activeCategory->name }} @else {{ $blogHeader['title'] }} @endisset
             </h1>
-            <p class="mt-3 text-charcoal-500 dark:text-charcoal-400">News, market notes, and product updates from the Ecozeen Swap team.</p>
+            @if ($blogHeader['subtitle'] !== '')
+                <p class="mt-3 text-charcoal-500 dark:text-charcoal-400">{!! nl2br(e($blogHeader['subtitle'])) !!}</p>
+            @endif
         </div>
 
         <div class="mt-8 flex flex-wrap items-center justify-center gap-2">
-            <a href="{{ route('blog.index') }}" class="px-4 py-1.5 rounded-full text-sm font-medium {{ ! isset($activeCategory) ? 'bg-brand-500 text-white' : 'bg-charcoal-100 dark:bg-charcoal-800 text-charcoal-600 dark:text-charcoal-300' }}">All</a>
+            <a href="{{ route('blog.index') }}" class="px-4 py-1.5 rounded-full text-sm font-medium {{ ! isset($activeCategory) ? 'bg-brand-500 text-white' : 'bg-charcoal-100 dark:bg-charcoal-800 text-charcoal-600 dark:text-charcoal-300' }}">{{ $blogHeader['all_label'] }}</a>
             @foreach ($categories as $category)
                 <a href="{{ route('blog.category', $category->slug) }}" class="px-4 py-1.5 rounded-full text-sm font-medium {{ (isset($activeCategory) && $activeCategory->id === $category->id) ? 'bg-brand-500 text-white' : 'bg-charcoal-100 dark:bg-charcoal-800 text-charcoal-600 dark:text-charcoal-300' }}">{{ $category->name }}</a>
             @endforeach

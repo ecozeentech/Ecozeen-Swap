@@ -311,6 +311,7 @@ query scope, not a scheduled job), but it's good practice to add it anyway for f
      real receiving address for every active crypto asset (e.g. your BTC/ETH/USDT hot wallet).
      Every user sees the same address(es) here; there's no per-user generated address.
    - `/admin/branding` — replace the placeholder logo/favicon with your final artwork if desired
+   - `/admin/site-content` — homepage, About page sections (headings, cards, team photos), blog header, navigation labels, footer, and contact page labels. The About story, contact intro, privacy policy, and terms stay under `/admin/pages`. Phone, email, and address stay under `/admin/settings`
    - `/admin/pwa` — the installable app icon, splash icon, app name, and theme/background colors
      for "Add to Home Screen" — independent from the branding logo/favicon above
    - `/admin/settings` — support widget (Tawk.to URL), coming-soon message, gift card buyback %,
@@ -374,6 +375,24 @@ check.
 Finally, clear your **browser cache** (or just hard-refresh with Ctrl+Shift+R / Cmd+Shift+R) when
 testing — browsers aggressively cache `public/build/` assets, so a stale tab can look "not fixed"
 even after a correct deploy.
+
+### This release (USDT logos, scrollable admin menu, site content)
+
+No new database tables. `php artisan migrate --force` is still safe to run; it will report that
+nothing is pending. What you get from `git pull`:
+
+- Bundled crypto logos in `public/images/crypto/` (USDT, BTC, ETH, and the other seeded coins).
+  These are ordinary image files, not part of the Vite build, so they show up as soon as the pull
+  finishes. An admin-uploaded coin logo still wins over the bundled one.
+- A scrollable admin menu on phones. The layout fix is in the Blade templates; rebuild and
+  re-upload `public/build/` so the stylesheet includes it, then hard-refresh.
+- `/admin/site-content` for the public homepage, About sections, blog header, navigation labels,
+  footer, and contact labels. Nothing is written to the database until an admin clicks Save, and
+  the public site keeps the current wording until then. Photos uploaded there are stored under
+  `storage/app/public/site-content/` and need the `storage:link` you created on first install.
+
+After the commands above, open `/admin/site-content`, change a homepage headline, save, and
+confirm the public homepage shows the new text.
 
 ---
 

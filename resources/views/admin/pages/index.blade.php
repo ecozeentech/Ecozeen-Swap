@@ -1,6 +1,12 @@
 <x-admin-layout>
     <x-slot name="title">Pages</x-slot>
 
+    <div class="mb-6 rounded-2xl border border-charcoal-100 dark:border-charcoal-800 bg-white dark:bg-charcoal-900 p-5 shadow-sm text-sm text-charcoal-500 dark:text-charcoal-400">
+        Homepage, About sections, the blog header, navigation, footer, and contact labels are edited under
+        <a href="{{ route('admin.site-content.edit') }}" class="font-semibold text-brand-600 hover:underline">Site Content</a>.
+        Use the list below for the About story, the contact intro, privacy policy, terms, and any extra pages. HTML is supported.
+    </div>
+
     <div class="flex items-center justify-between mb-6">
         <p class="text-sm text-charcoal-500 dark:text-charcoal-400">Manage static content pages shown on the public site.</p>
         <a href="{{ route('admin.pages.create') }}" class="inline-flex items-center px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold">New Page</a>

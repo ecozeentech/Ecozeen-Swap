@@ -23,7 +23,7 @@
                         <span class="font-bold">Admin Panel</span>
                     </a>
                 </div>
-                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 text-charcoal-300">
+                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 text-charcoal-300" style="min-height:0">
                     @include('partials.admin-nav-items')
                 </nav>
                 <div class="flex-shrink-0 p-3 border-t border-charcoal-800 space-y-1">
@@ -47,7 +47,7 @@
                     <span class="font-bold">Admin Panel</span>
                     <button @click="sidebarOpen = false" class="text-charcoal-400"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
                 </div>
-                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 text-charcoal-300" @click="sidebarOpen = false">
+                <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 text-charcoal-300" style="min-height:0" @click="sidebarOpen = false">
                     @include('partials.admin-nav-items')
                 </nav>
                 <div class="flex-shrink-0 p-3 border-t border-charcoal-800 space-y-1">
