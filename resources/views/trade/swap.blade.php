@@ -26,7 +26,7 @@
                         </div>
                         <p class="font-bold text-charcoal-900 dark:text-white mt-1">{{ number_format($wallet->availableBalance(), 6) }}</p>
                         @if ((float) $wallet->reserved_balance > 0)
-                            <p class="text-[11px] text-amber-500">+{{ number_format($wallet->reserved_balance, 6) }} pending</p>
+                            <p class="text-[11px] text-amber-500">{{ number_format($wallet->reserved_balance, 6) }} held</p>
                         @endif
                     </div>
                 @endforeach

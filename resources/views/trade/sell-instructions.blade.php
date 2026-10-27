@@ -5,15 +5,25 @@
         <div class="h-14 w-14 mx-auto rounded-2xl bg-brand-50 dark:bg-charcoal-800 flex items-center justify-center text-brand-500 mb-4">
             <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20V4m0 0l5 5m-5-5l-5 5" /></svg>
         </div>
-        <h2 class="text-lg font-bold text-charcoal-900 dark:text-white mb-2">Send {{ $transaction->metadata['crypto_amount'] }} {{ $transaction->metadata['crypto_symbol'] }}</h2>
-        <p class="text-sm text-charcoal-500 dark:text-charcoal-400 mb-4">
-            Send exactly the amount above to the address below. Once received, our team will confirm and credit
-            <strong>{{ number_format($transaction->amount, 2) }} {{ $transaction->currency_code }}</strong> to your fiat wallet.
-        </p>
+        @if (($transaction->metadata['funding_source'] ?? null) === 'wallet')
+            <h2 class="text-lg font-bold text-charcoal-900 dark:text-white mb-2">{{ $transaction->metadata['crypto_amount'] }} {{ $transaction->metadata['crypto_symbol'] }} is held</h2>
+            <p class="text-sm text-charcoal-500 dark:text-charcoal-400 mb-4">
+                This sale uses coins already in your Ecozeen wallet. They are held and are not part of your available balance.
+                When the sale is confirmed they leave your wallet, and
+                <strong>{{ number_format($transaction->amount, 2) }} {{ $transaction->currency_code }}</strong> is credited.
+                Do not send the same coins again.
+            </p>
+        @else
+            <h2 class="text-lg font-bold text-charcoal-900 dark:text-white mb-2">Send {{ $transaction->metadata['crypto_amount'] }} {{ $transaction->metadata['crypto_symbol'] }}</h2>
+            <p class="text-sm text-charcoal-500 dark:text-charcoal-400 mb-4">
+                Send exactly the amount above to the address below. Once received, our team will confirm and credit
+                <strong>{{ number_format($transaction->amount, 2) }} {{ $transaction->currency_code }}</strong> to your fiat wallet.
+            </p>
 
-        <div class="rounded-xl bg-charcoal-50 dark:bg-charcoal-800 p-4 break-all font-mono text-sm">
-            {{ $transaction->metadata['deposit_address'] }}
-        </div>
+            <div class="rounded-xl bg-charcoal-50 dark:bg-charcoal-800 p-4 break-all font-mono text-sm">
+                {{ $transaction->metadata['deposit_address'] }}
+            </div>
+        @endif
 
         @if (! empty($transaction->metadata['memo_tag']))
             <div class="mt-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 p-3 text-sm">

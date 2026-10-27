@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use RuntimeException;
 
 class GiftCardVerificationController extends Controller
 {
@@ -32,23 +33,33 @@ class GiftCardVerificationController extends Controller
 
     public function approve(GiftCard $giftCard): RedirectResponse
     {
-        DB::transaction(function () use ($giftCard) {
-            $wallet = $this->wallets->getOrCreateWallet($giftCard->user, 'fiat', $giftCard->payout_currency ?? 'USD');
+        try {
+            DB::transaction(function () use ($giftCard) {
+                $locked = GiftCard::query()->lockForUpdate()->findOrFail($giftCard->id);
 
-            $this->wallets->credit($wallet, $giftCard->selling_price, [
-                'type' => 'giftcard',
-                'currency_code' => $wallet->currency_code,
-                'status' => 'completed',
-                'reference' => Transaction::generateReference('GFT'),
-                'metadata' => ['gift_card_id' => $giftCard->id, 'card_type' => $giftCard->card_type],
-            ]);
+                if (! in_array($locked->status, ['pending', 'reviewing'], true)) {
+                    throw new RuntimeException('This gift card has already been processed.');
+                }
 
-            $giftCard->update([
-                'status' => 'paid',
-                'verified_by' => auth()->id(),
-                'verified_at' => now(),
-            ]);
-        });
+                $wallet = $this->wallets->getOrCreateWallet($locked->user, 'fiat', $locked->payout_currency ?? 'USD');
+
+                $this->wallets->credit($wallet, $locked->selling_price, [
+                    'type' => 'giftcard',
+                    'currency_code' => $wallet->currency_code,
+                    'status' => 'completed',
+                    'reference' => Transaction::generateReference('GFT'),
+                    'metadata' => ['gift_card_id' => $locked->id, 'card_type' => $locked->card_type],
+                ]);
+
+                $locked->update([
+                    'status' => 'paid',
+                    'verified_by' => auth()->id(),
+                    'verified_at' => now(),
+                ]);
+            });
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['gift_card' => $e->getMessage()]);
+        }
 
         Notify::send($giftCard->user, new AccountNotification(
             'Gift Card Approved',

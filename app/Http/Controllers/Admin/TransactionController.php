@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Transaction;
+use App\Models\Wallet;
 use App\Notifications\TransactionStatusUpdated;
+use App\Services\PaymentSettlement;
 use App\Services\TradeService;
 use App\Services\WalletService;
 use App\Support\Notify;
@@ -13,10 +15,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use RuntimeException;
 
 class TransactionController extends Controller
 {
-    public function __construct(protected TradeService $trades, protected WalletService $wallets) {}
+    public function __construct(
+        protected TradeService $trades,
+        protected WalletService $wallets,
+        protected PaymentSettlement $settlements,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -50,23 +57,12 @@ class TransactionController extends Controller
             return back()->withErrors(['transaction' => "A {$transaction->type} order can't be completed with Mark as Paid — use the matching action for this order type instead."]);
         }
 
-        DB::transaction(function () use ($transaction) {
-            if ($transaction->type === 'buy') {
-                $this->trades->completeBuy($transaction, auth()->user());
-            } else {
-                // Deposits can also be confirmed via WalletController::creditDeposit()
-                // (gateway webhook/callback); this is the manual bank-transfer path.
-                $locked = Transaction::query()->lockForUpdate()->findOrFail($transaction->id);
+        $alreadyCompleted = $transaction->status === 'completed';
+        $settled = $this->settlements->settle($transaction, auth()->user());
 
-                if ($locked->status !== 'completed') {
-                    $wallet = $this->wallets->getOrCreateWallet($locked->user, 'fiat', $locked->currency_code);
-                    $wallet->increment('balance', $locked->amount);
-                    $locked->update(['status' => 'completed', 'processed_by' => auth()->id(), 'processed_at' => now()]);
-                }
-            }
-        });
-
-        Notify::send($transaction->user, new TransactionStatusUpdated($transaction->fresh()));
+        if (! $alreadyCompleted && $settled->status === 'completed') {
+            Notify::send($settled->user, new TransactionStatusUpdated($settled));
+        }
 
         ActivityLog::record(auth()->id(), 'admin_marked_transaction_paid', ['reference' => $transaction->reference]);
 
@@ -98,24 +94,42 @@ class TransactionController extends Controller
             return back()->withErrors(['transaction' => 'Only a pending withdrawal can be approved.']);
         }
 
-        DB::transaction(function () use ($transaction) {
-            $wallet = $transaction->wallet()->lockForUpdate()->first() ?? $this->wallets->getOrCreateWallet($transaction->user, 'fiat', $transaction->currency_code);
+        try {
+            DB::transaction(function () use ($transaction) {
+                $locked = Transaction::query()->lockForUpdate()->findOrFail($transaction->id);
 
-            // The funds were already held in reserved_balance the moment the
-            // withdrawal was requested (so the user couldn't spend them
-            // twice). Approving finalizes it: release the hold AND take the
-            // money out of the wallet for good, since it has now actually
-            // left the platform.
-            $wallet->reserved_balance = max(0, bcsub((string) $wallet->reserved_balance, (string) $transaction->amount, 8));
-            $wallet->balance = bcsub((string) $wallet->balance, (string) $transaction->amount, 8);
-            $wallet->save();
+                if ($locked->type !== 'withdrawal' || $locked->status !== 'pending') {
+                    throw new RuntimeException('Only a pending withdrawal can be approved.');
+                }
 
-            $transaction->update([
-                'status' => 'completed',
-                'processed_by' => auth()->id(),
-                'processed_at' => now(),
-            ]);
-        });
+                $wallet = $locked->wallet_id
+                    ? Wallet::query()->lockForUpdate()->find($locked->wallet_id)
+                    : null;
+
+                if (! $wallet) {
+                    throw new RuntimeException('This withdrawal has no wallet to debit.');
+                }
+
+                // Refuse rather than driving the balance negative. A hold
+                // that was reserved past the real balance must not be paid.
+                if (bccomp((string) $wallet->balance, (string) $locked->amount, 8) < 0) {
+                    throw new RuntimeException('This withdrawal is larger than the wallet balance, so it was not approved.');
+                }
+
+                $wallet->balance = bcsub((string) $wallet->balance, (string) $locked->amount, 8);
+                $remaining = bcsub((string) $wallet->reserved_balance, (string) $locked->amount, 8);
+                $wallet->reserved_balance = bccomp($remaining, '0', 8) < 0 ? '0.00000000' : $remaining;
+                $wallet->save();
+
+                $locked->update([
+                    'status' => 'completed',
+                    'processed_by' => auth()->id(),
+                    'processed_at' => now(),
+                ]);
+            });
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['transaction' => $e->getMessage()]);
+        }
 
         Notify::send($transaction->user, new TransactionStatusUpdated($transaction->fresh()));
 
@@ -128,27 +142,59 @@ class TransactionController extends Controller
     {
         $request->validate(['reason' => ['required', 'string', 'max:255']]);
 
-        DB::transaction(function () use ($transaction, $request) {
-            if ($transaction->type === 'withdrawal') {
-                $wallet = $transaction->wallet;
-                if ($wallet) {
-                    $wallet->reserved_balance = max(0, bcsub((string) $wallet->reserved_balance, (string) $transaction->amount, 8));
-                    $wallet->save();
-                }
-            }
+        try {
+            DB::transaction(function () use ($transaction, $request) {
+                $locked = Transaction::query()->lockForUpdate()->findOrFail($transaction->id);
 
-            $transaction->update([
-                'status' => 'failed',
-                'admin_note' => $request->input('reason'),
-                'processed_by' => auth()->id(),
-                'processed_at' => now(),
-            ]);
-        });
+                if (in_array($locked->status, ['completed', 'failed'], true)) {
+                    throw new RuntimeException('This order has already been processed.');
+                }
+
+                $this->releaseHeldFunds($locked);
+
+                $locked->update([
+                    'status' => 'failed',
+                    'admin_note' => $request->input('reason'),
+                    'processed_by' => auth()->id(),
+                    'processed_at' => now(),
+                ]);
+            });
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['transaction' => $e->getMessage()]);
+        }
 
         Notify::send($transaction->user, new TransactionStatusUpdated($transaction->fresh()));
 
         ActivityLog::record(auth()->id(), 'admin_rejected_transaction', ['reference' => $transaction->reference]);
 
         return back()->with('status', 'transaction-rejected');
+    }
+
+    /**
+     * Give a pending hold back to the available balance, once.
+     * Withdrawals hold their own amount. Wallet-funded sells hold the
+     * crypto amount recorded when the order was placed. Older sells with
+     * no funding source never took a hold, so there is nothing to release.
+     */
+    protected function releaseHeldFunds(Transaction $transaction): void
+    {
+        if ($transaction->type === 'withdrawal' && $transaction->wallet_id) {
+            $wallet = Wallet::query()->lockForUpdate()->find($transaction->wallet_id);
+            if ($wallet) {
+                $this->wallets->releaseReserve($wallet, $transaction->amount);
+            }
+
+            return;
+        }
+
+        if ($transaction->type === 'sell' && ($transaction->metadata['funding_source'] ?? null) === 'wallet') {
+            $walletId = $transaction->metadata['crypto_wallet_id'] ?? null;
+            $held = $transaction->metadata['crypto_amount_held'] ?? null;
+            $wallet = $walletId ? Wallet::query()->lockForUpdate()->find($walletId) : null;
+
+            if ($wallet && $held !== null) {
+                $this->wallets->releaseReserve($wallet, $held);
+            }
+        }
     }
 }

@@ -5,9 +5,12 @@
         <h2 class="text-lg font-bold text-charcoal-900 dark:text-white mb-4">Withdraw Funds</h2>
 
         @php
-            $availableByCode = $wallets->mapWithKeys(fn ($wallet) => [$wallet->currency_code => (float) $wallet->availableBalance()]);
+            $availableByType = [
+                'fiat' => $wallets->where('currency_type', 'fiat')->mapWithKeys(fn ($wallet) => [$wallet->currency_code => (float) $wallet->availableBalance()]),
+                'crypto' => $wallets->where('currency_type', 'crypto')->mapWithKeys(fn ($wallet) => [$wallet->currency_code => (float) $wallet->availableBalance()]),
+            ];
         @endphp
-        <form method="POST" action="{{ route('wallet.withdraw.store') }}" x-data="{ type: 'fiat', currency: '{{ $fiatCurrencies->first()?->code }}', available: {{ $availableByCode->toJson() }} }" class="space-y-4">
+        <form method="POST" action="{{ route('wallet.withdraw.store') }}" x-data="{ type: 'fiat', currency: '{{ $fiatCurrencies->first()?->code }}', available: {{ json_encode($availableByType) }} }" class="space-y-4">
             @csrf
             <div>
                 <x-input-label value="Withdraw" />
@@ -37,12 +40,12 @@
                         </template>
                     </template>
                 </select>
-                <p class="mt-1 text-xs text-charcoal-400">Available to withdraw: <span class="font-semibold text-charcoal-600 dark:text-charcoal-300" x-text="(available[currency] ?? 0).toLocaleString(undefined, { maximumFractionDigits: 8 })"></span> <span x-text="currency"></span></p>
+                <p class="mt-1 text-xs text-charcoal-400">Available to withdraw: <span class="font-semibold text-charcoal-600 dark:text-charcoal-300" x-text="((available[type] && available[type][currency]) ? available[type][currency] : 0).toLocaleString(undefined, { maximumFractionDigits: 8 })"></span> <span x-text="currency"></span></p>
             </div>
 
             <div>
                 <x-input-label for="amount" value="Amount" />
-                <x-text-input id="amount" name="amount" type="number" step="0.00000001" min="0.00000001" x-bind:max="available[currency] ?? null" required class="mt-1 w-full" />
+                <x-text-input id="amount" name="amount" type="number" step="0.00000001" min="0.00000001" x-bind:max="(available[type] && available[type][currency]) ? available[type][currency] : null" required class="mt-1 w-full" />
                 <x-input-error :messages="$errors->get('amount')" class="mt-2" />
             </div>
 

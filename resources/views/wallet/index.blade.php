@@ -24,7 +24,7 @@
                         </div>
                         <p class="text-2xl font-extrabold text-charcoal-900 dark:text-white mt-2">{{ number_format($wallet->availableBalance(), 2) }}</p>
                         @if ((float) $wallet->reserved_balance > 0)
-                            <p class="text-xs text-amber-500 mt-1">{{ number_format($wallet->reserved_balance, 2) }} pending withdrawal &middot; {{ number_format($wallet->balance, 2) }} total</p>
+                            <p class="text-xs text-amber-500 mt-1">{{ number_format($wallet->reserved_balance, 2) }} held and not available</p>
                         @else
                             <p class="text-xs text-charcoal-400 mt-1">Available balance</p>
                         @endif
@@ -52,7 +52,7 @@
                         </div>
                         <p class="text-2xl font-extrabold text-charcoal-900 dark:text-white mt-2">{{ number_format($wallet->availableBalance(), 6) }}</p>
                         @if ((float) $wallet->reserved_balance > 0)
-                            <p class="text-xs text-amber-500 mt-1">{{ number_format($wallet->reserved_balance, 6) }} pending withdrawal &middot; {{ number_format($wallet->balance, 6) }} total</p>
+                            <p class="text-xs text-amber-500 mt-1">{{ number_format($wallet->reserved_balance, 6) }} held and not available</p>
                         @else
                             <p class="text-xs text-charcoal-400 mt-1">Available balance</p>
                         @endif

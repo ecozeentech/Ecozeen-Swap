@@ -83,6 +83,97 @@ class WalletService
     {
         $available = bcsub((string) $wallet->balance, (string) $wallet->reserved_balance, 8);
 
-        return bccomp($available, (string) $amount, 8) >= 0;
+        return bccomp($available, $this->normalize($amount), 8) >= 0;
+    }
+
+    /**
+     * Hold funds so they cannot be spent twice. The check and the hold
+     * happen on the locked row, so two requests cannot both pass.
+     */
+    public function reserve(Wallet $wallet, float|string $amount): Wallet
+    {
+        $amount = $this->normalize($amount);
+        $this->assertPositive($amount, 'Hold');
+
+        return DB::transaction(function () use ($wallet, $amount) {
+            $locked = $this->locked($wallet);
+            $available = bcsub((string) $locked->balance, (string) $locked->reserved_balance, 8);
+
+            if (bccomp($available, $amount, 8) < 0) {
+                throw new RuntimeException('Insufficient wallet balance.');
+            }
+
+            $locked->reserved_balance = bcadd((string) $locked->reserved_balance, $amount, 8);
+            $locked->save();
+
+            return $locked;
+        });
+    }
+
+    /**
+     * Put a hold back into the available balance. Used when a withdrawal
+     * or wallet-funded sell is rejected. Floors at zero so a repeated
+     * release cannot drive the hold negative.
+     */
+    public function releaseReserve(Wallet $wallet, float|string $amount): Wallet
+    {
+        $amount = $this->normalize($amount);
+
+        return DB::transaction(function () use ($wallet, $amount) {
+            $locked = $this->locked($wallet);
+            $remaining = bcsub((string) $locked->reserved_balance, $amount, 8);
+            $locked->reserved_balance = bccomp($remaining, '0', 8) < 0 ? '0.00000000' : $remaining;
+            $locked->save();
+
+            return $locked;
+        });
+    }
+
+    /**
+     * Finish a hold: the money has left the platform, so it comes out of
+     * both the hold and the balance. Refuses to push the balance below zero.
+     */
+    public function captureReserve(Wallet $wallet, float|string $amount): Wallet
+    {
+        $amount = $this->normalize($amount);
+        $this->assertPositive($amount, 'Capture');
+
+        return DB::transaction(function () use ($wallet, $amount) {
+            $locked = $this->locked($wallet);
+
+            if (bccomp((string) $locked->balance, $amount, 8) < 0) {
+                throw new RuntimeException('Wallet balance is lower than the amount being finalized.');
+            }
+
+            $locked->balance = bcsub((string) $locked->balance, $amount, 8);
+            $remaining = bcsub((string) $locked->reserved_balance, $amount, 8);
+            $locked->reserved_balance = bccomp($remaining, '0', 8) < 0 ? '0.00000000' : $remaining;
+            $locked->save();
+
+            return $locked;
+        });
+    }
+
+    protected function locked(Wallet $wallet): Wallet
+    {
+        $locked = Wallet::query()->lockForUpdate()->find($wallet->id);
+
+        if (! $locked) {
+            throw new RuntimeException('Wallet not found.');
+        }
+
+        return $locked;
+    }
+
+    protected function normalize(float|string $amount): string
+    {
+        return bcadd(is_string($amount) ? $amount : number_format($amount, 8, '.', ''), '0', 8);
+    }
+
+    protected function assertPositive(string $amount, string $action): void
+    {
+        if (bccomp($amount, '0', 8) <= 0) {
+            throw new RuntimeException($action.' amount must be greater than zero.');
+        }
     }
 }

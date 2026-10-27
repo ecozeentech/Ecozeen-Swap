@@ -394,6 +394,45 @@ nothing is pending. What you get from `git pull`:
 After the commands above, open `/admin/site-content`, change a homepage headline, save, and
 confirm the public homepage shows the new text.
 
+### This release (wallet balances)
+
+No new database tables. `php artisan migrate --force` is still safe to run; it will report that
+nothing is pending. This release is PHP and Blade only. The wording changes reuse classes that
+are already in the compiled stylesheet, so a missed `public/build/` upload does not leave the
+balance fix half-applied. Rebuilding the stylesheet is still the right habit after a pull.
+
+What changes once the pull is live:
+
+- A deposit or a buy is credited once, even when Paystack or Flutterwave hits both the browser
+  return URL and the webhook at the same time. A buy credits only the crypto wallet. It does not
+  add naira, and it does not create a second wallet using the coin symbol as a fiat code.
+- A buy that includes a receiving wallet address is marked paid without putting those coins on
+  the Ecozeen balance. The coins are the ones you send to that address.
+- A withdrawal is refused when the available balance cannot cover it, including a second request
+  for the same funds. Approving a withdrawal removes it from both the hold and the balance.
+  Rejecting it puts the hold back once. Approving a withdrawal larger than the balance is refused
+  instead of driving the balance negative.
+- If a user already holds the coin they are selling, that amount is held immediately and is not
+  available to withdraw. Confirming the sale removes the coins and credits the fiat. Rejecting
+  the sale releases the hold. A sale from an empty wallet still waits for the on-chain transfer.
+  A sale larger than a balance the user already holds is rejected.
+- Approving a gift card twice credits the payout once. A referral withdrawal request is checked
+  again under a lock so two requests cannot spend the same commission.
+
+Balances that were already inflated before this deploy are not rewritten automatically. New
+orders stop the over-credit. If a specific user is still high, compare their completed deposits
+and buys with the wallet row in Admin → Users and adjust that wallet by hand.
+
+After the commands above, use a test user:
+
+1. Fund or mark a deposit paid once, then open the wallet. The naira figure matches that one
+   deposit, not double.
+2. Place a sell for a coin the user already holds. The available balance drops straight away.
+   A withdrawal of those same coins is refused. After you confirm the sale, the coins are gone
+   from the available balance and the fiat payout is there.
+3. Mark a buy paid. Only the crypto wallet increases, unless the order has a receiving address,
+   in which case the Ecozeen crypto balance stays unchanged.
+
 ---
 
 ## Troubleshooting

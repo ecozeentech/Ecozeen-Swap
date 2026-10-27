@@ -36,7 +36,7 @@
                             <div class="text-right">
                                 <p class="font-bold text-charcoal-900 dark:text-white">{{ number_format($wallet->availableBalance(), $wallet->isCrypto() ? 4 : 2) }}</p>
                                 @if ((float) $wallet->reserved_balance > 0)
-                                    <p class="text-[11px] text-amber-500">+{{ number_format($wallet->reserved_balance, $wallet->isCrypto() ? 4 : 2) }} pending</p>
+                                    <p class="text-[11px] text-amber-500">{{ number_format($wallet->reserved_balance, $wallet->isCrypto() ? 4 : 2) }} held</p>
                                 @endif
                             </div>
                         </div>

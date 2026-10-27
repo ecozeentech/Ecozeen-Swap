@@ -7,6 +7,7 @@ use App\Models\FiatCurrency;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -95,22 +96,27 @@ class TradeService
                 return $transaction;
             }
 
-            // The "buy" order row created in initiateBuy() IS the ledger
-            // entry for this trade — crediting the wallet via
-            // WalletService::credit() here would create a *second*
-            // Transaction row for the same event (it always inserts one),
-            // which is exactly what showed up as "duplicate" buy orders.
-            // Mutate the wallet balance directly instead, the same way
-            // WalletController::creditDeposit() does for deposits.
-            $wallet = $this->wallets->getOrCreateWallet($transaction->user, 'crypto', $transaction->currency_code);
-            $lockedWallet = Wallet::query()->lockForUpdate()->find($wallet->id);
-            $lockedWallet->balance = bcadd((string) $lockedWallet->balance, (string) $transaction->amount, 8);
-            $lockedWallet->save();
+            // A receiving address means the coins are sent off the platform.
+            // Crediting the Ecozeen wallet as well left users able to
+            // withdraw crypto that had already been paid out on-chain.
+            $sentExternally = trim((string) ($transaction->metadata['receiving_wallet_address'] ?? '')) !== '';
+
+            if (! $sentExternally) {
+                // The "buy" order row created in initiateBuy() IS the ledger
+                // entry for this trade — crediting the wallet via
+                // WalletService::credit() here would create a *second*
+                // Transaction row for the same event (it always inserts one),
+                // which is exactly what showed up as "duplicate" buy orders.
+                $wallet = $this->wallets->getOrCreateWallet($transaction->user, 'crypto', $transaction->currency_code);
+                $lockedWallet = Wallet::query()->lockForUpdate()->find($wallet->id);
+                $lockedWallet->balance = bcadd((string) $lockedWallet->balance, (string) $transaction->amount, 8);
+                $lockedWallet->save();
+                $transaction->wallet_id = $lockedWallet->id;
+            }
 
             $transaction->update([
-                'wallet_id' => $lockedWallet->id,
                 'status' => 'completed',
-                'processed_by' => $admin?->id,
+                'processed_by' => $admin?->id ?? $transaction->processed_by,
                 'processed_at' => now(),
             ]);
 
@@ -151,32 +157,60 @@ class TradeService
         $quote = $this->quoteSell($crypto, $fiat, $cryptoAmount);
         $usdEquivalent = $this->toUsd((float) $quote['fiat_amount'], $fiat);
 
-        if ($duplicate = $this->findRecentDuplicateOrder($user, 'sell', $fiat->code, $quote['fiat_amount'])) {
-            return $duplicate;
-        }
-
         $this->assertWithinDailyLimit($user, $usdEquivalent);
 
-        $wallet = $this->wallets->getOrCreateWallet($user, 'fiat', $fiat->code);
+        $cryptoWallet = $this->wallets->getOrCreateWallet($user, 'crypto', $crypto->symbol);
+        $fiatWallet = $this->wallets->getOrCreateWallet($user, 'fiat', $fiat->code);
+        $heldAmount = bcadd((string) $cryptoAmount, '0', 8);
 
-        return Transaction::create([
-            'user_id' => $user->id,
-            'wallet_id' => $wallet->id,
-            'type' => 'sell',
-            'amount' => $quote['fiat_amount'],
-            'fee' => 0,
-            'currency_code' => $fiat->code,
-            'status' => 'pending',
-            'reference' => Transaction::generateReference('SELL'),
-            'metadata' => array_merge([
-                'crypto_amount' => $cryptoAmount,
-                'crypto_symbol' => $crypto->symbol,
-                'rate_id' => $quote['rate']->id,
-                'rate_used' => (string) $quote['rate']->buy_rate,
-                'deposit_address' => $depositAddress,
-                'usd_equivalent' => $usdEquivalent,
-            ], $extraMetadata),
-        ]);
+        return DB::transaction(function () use ($user, $crypto, $fiat, $cryptoAmount, $depositAddress, $extraMetadata, $quote, $usdEquivalent, $cryptoWallet, $fiatWallet, $heldAmount) {
+            // Identical double-clicks must not place a second hold.
+            if ($duplicate = $this->findRecentDuplicateOrder($user, 'sell', $fiat->code, $quote['fiat_amount'])) {
+                return $duplicate;
+            }
+
+            $lockedCrypto = Wallet::query()->lockForUpdate()->findOrFail($cryptoWallet->id);
+            $available = bcsub((string) $lockedCrypto->balance, (string) $lockedCrypto->reserved_balance, 8);
+            $fundedByWallet = bccomp($available, '0', 8) > 0;
+
+            // Coins already in the Ecozeen wallet have to fund the sale.
+            // Otherwise the user can sell them (naira is credited) and
+            // still withdraw the same coins. An empty wallet means the
+            // crypto is coming from outside, and only an admin confirming
+            // the on-chain receipt credits the fiat.
+            if ($fundedByWallet && bccomp($available, $heldAmount, 8) < 0) {
+                throw new RuntimeException(
+                    "You have {$available} {$crypto->symbol} available. A sale has to use that balance, and this order is larger than it. Sell up to your available balance, or withdraw the coins first if you are sending them from an external wallet."
+                );
+            }
+
+            if ($fundedByWallet) {
+                $lockedCrypto->reserved_balance = bcadd((string) $lockedCrypto->reserved_balance, $heldAmount, 8);
+                $lockedCrypto->save();
+            }
+
+            return Transaction::create([
+                'user_id' => $user->id,
+                'wallet_id' => $fiatWallet->id,
+                'type' => 'sell',
+                'amount' => $quote['fiat_amount'],
+                'fee' => 0,
+                'currency_code' => $fiat->code,
+                'status' => 'pending',
+                'reference' => Transaction::generateReference('SELL'),
+                'metadata' => array_merge([
+                    'crypto_amount' => $cryptoAmount,
+                    'crypto_amount_held' => $fundedByWallet ? $heldAmount : null,
+                    'crypto_symbol' => $crypto->symbol,
+                    'crypto_wallet_id' => $fundedByWallet ? $lockedCrypto->id : null,
+                    'funding_source' => $fundedByWallet ? 'wallet' : 'external',
+                    'rate_id' => $quote['rate']->id,
+                    'rate_used' => (string) $quote['rate']->buy_rate,
+                    'deposit_address' => $depositAddress,
+                    'usd_equivalent' => $usdEquivalent,
+                ], $extraMetadata),
+            ]);
+        });
     }
 
     public function confirmSell(Transaction $transaction, ?User $admin = null): Transaction
@@ -188,6 +222,21 @@ class TradeService
 
             if ($transaction->status === 'completed') {
                 return $transaction;
+            }
+
+            // Wallet-funded sales already reserved the crypto when the
+            // order was placed. Confirming the sale takes those coins
+            // out of the balance for good, then pays the fiat.
+            if (($transaction->metadata['funding_source'] ?? null) === 'wallet') {
+                $cryptoWalletId = $transaction->metadata['crypto_wallet_id'] ?? null;
+                $held = $transaction->metadata['crypto_amount_held'] ?? null;
+                $cryptoWallet = $cryptoWalletId ? Wallet::query()->lockForUpdate()->find($cryptoWalletId) : null;
+
+                if (! $cryptoWallet || $held === null) {
+                    throw new RuntimeException('This sell is funded by the user wallet, but the held coins could not be found.');
+                }
+
+                $this->wallets->captureReserve($cryptoWallet, $held);
             }
 
             // Same reasoning as completeBuy(): the "sell" order row already
@@ -255,41 +304,45 @@ class TradeService
 
     public function executeSwap(User $user, string $token): Transaction
     {
-        $lock = Cache::get($token);
+        try {
+            $quote = Cache::lock('swap-quote:'.$token, 15)->block(5, function () use ($token) {
+                return Cache::pull($token);
+            });
+        } catch (LockTimeoutException) {
+            throw new RuntimeException('This swap quote is already being processed. Please request a new quote.');
+        }
 
-        if (! $lock || $lock['user_id'] !== $user->id) {
+        if (! $quote || ($quote['user_id'] ?? null) !== $user->id) {
             throw new RuntimeException('This swap quote has expired. Please request a new quote.');
         }
 
-        Cache::forget($token);
+        $from = CryptoAsset::findOrFail($quote['from_asset_id']);
+        $to = CryptoAsset::findOrFail($quote['to_asset_id']);
 
-        $from = CryptoAsset::findOrFail($lock['from_asset_id']);
-        $to = CryptoAsset::findOrFail($lock['to_asset_id']);
-
-        return DB::transaction(function () use ($user, $from, $to, $lock) {
+        return DB::transaction(function () use ($user, $from, $to, $quote) {
             $fromWallet = $this->wallets->getOrCreateWallet($user, 'crypto', $from->symbol);
 
-            if (! $this->wallets->hasSufficientBalance($fromWallet, $lock['from_amount'])) {
+            if (! $this->wallets->hasSufficientBalance($fromWallet, $quote['from_amount'])) {
                 throw new RuntimeException("Insufficient {$from->symbol} balance to complete this swap.");
             }
 
-            $this->assertWithinDailyLimit($user, (float) $lock['usd_value']);
+            $this->assertWithinDailyLimit($user, (float) $quote['usd_value']);
 
-            $this->wallets->debit($fromWallet, $lock['from_amount'], [
+            $this->wallets->debit($fromWallet, $quote['from_amount'], [
                 'type' => 'swap',
                 'currency_code' => $from->symbol,
                 'status' => 'completed',
                 'reference' => Transaction::generateReference('SWAPOUT'),
-                'metadata' => ['to_asset' => $to->symbol, 'to_amount' => $lock['to_amount'], 'usd_equivalent' => $lock['usd_value']],
+                'metadata' => ['to_asset' => $to->symbol, 'to_amount' => $quote['to_amount'], 'usd_equivalent' => $quote['usd_value']],
             ]);
 
             $toWallet = $this->wallets->getOrCreateWallet($user, 'crypto', $to->symbol);
-            $transaction = $this->wallets->credit($toWallet, $lock['to_amount'], [
+            $transaction = $this->wallets->credit($toWallet, $quote['to_amount'], [
                 'type' => 'swap',
                 'currency_code' => $to->symbol,
                 'status' => 'completed',
                 'reference' => Transaction::generateReference('SWAPIN'),
-                'metadata' => ['from_asset' => $from->symbol, 'from_amount' => $lock['from_amount'], 'usd_equivalent' => $lock['usd_value']],
+                'metadata' => ['from_asset' => $from->symbol, 'from_amount' => $quote['from_amount'], 'usd_equivalent' => $quote['usd_value']],
             ]);
 
             return $transaction;

@@ -175,13 +175,23 @@ class ReferralService
             throw new RuntimeException('Please select a valid bank account to receive this withdrawal.');
         }
 
-        $withdrawal = ReferralWithdrawal::create([
-            'user_id' => $user->id,
-            'bank_account_id' => $bankAccount->id,
-            'amount' => $amount,
-            'status' => 'pending',
-            'reference' => ReferralWithdrawal::generateReference(),
-        ]);
+        $withdrawal = DB::transaction(function () use ($user, $amount, $bankAccount) {
+            User::query()->lockForUpdate()->findOrFail($user->id);
+
+            $available = $this->availableBalance($user);
+
+            if ($amount > $available) {
+                throw new RuntimeException('You only have $'.number_format($available, 2).' available to withdraw.');
+            }
+
+            return ReferralWithdrawal::create([
+                'user_id' => $user->id,
+                'bank_account_id' => $bankAccount->id,
+                'amount' => $amount,
+                'status' => 'pending',
+                'reference' => ReferralWithdrawal::generateReference(),
+            ]);
+        });
 
         AdminAlert::broadcast(
             'Referral Withdrawal Requested',

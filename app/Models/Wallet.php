@@ -47,8 +47,15 @@ class Wallet extends Model
         return $this->currency_type === 'crypto';
     }
 
+    /**
+     * Spendable balance. Pending withdrawals and wallet-funded sells sit
+     * in reserved_balance, so they are not part of what the user can
+     * spend again. Never report a negative figure.
+     */
     public function availableBalance(): string
     {
-        return bcsub((string) $this->balance, (string) $this->reserved_balance, 8);
+        $available = bcsub((string) $this->balance, (string) $this->reserved_balance, 8);
+
+        return bccomp($available, '0', 8) < 0 ? '0.00000000' : $available;
     }
 }

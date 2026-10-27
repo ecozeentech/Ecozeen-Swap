@@ -10,10 +10,10 @@ use App\Models\DepositProof;
 use App\Models\FiatCurrency;
 use App\Models\PaymentGateway;
 use App\Models\Transaction;
-use App\Models\Wallet;
 use App\Notifications\AccountNotification;
 use App\Notifications\AdminAlert;
 use App\Services\FlutterwaveService;
+use App\Services\PaymentSettlement;
 use App\Services\PaystackService;
 use App\Services\WalletService;
 use App\Support\Notify;
@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use RuntimeException;
 use Throwable;
 
 class WalletController extends Controller
@@ -30,6 +31,7 @@ class WalletController extends Controller
         protected WalletService $wallets,
         protected PaystackService $paystack,
         protected FlutterwaveService $flutterwave,
+        protected PaymentSettlement $settlements,
     ) {}
 
     public function index(Request $request): View
@@ -186,7 +188,7 @@ class WalletController extends Controller
         if ($verified) {
             $this->creditDeposit($transaction);
 
-            return redirect()->route('wallet.index')->with('status', 'deposit-successful');
+            return redirect()->route('wallet.index')->with('status', $transaction->type === 'buy' ? 'purchase-confirmed' : 'deposit-successful');
         }
 
         return redirect()->route('wallet.index')->withErrors(['gateway' => 'We could not confirm your payment yet. It will be credited automatically once confirmed.']);
@@ -194,22 +196,16 @@ class WalletController extends Controller
 
     public function creditDeposit(Transaction $transaction): void
     {
-        DB::transaction(function () use ($transaction) {
-            $transaction = Transaction::query()->lockForUpdate()->findOrFail($transaction->id);
+        $wasCompleted = $transaction->fresh()?->status === 'completed';
+        $settled = $this->settlements->settle($transaction);
 
-            if ($transaction->status === 'completed') {
-                return;
-            }
+        if ($wasCompleted || $settled->type !== 'deposit' || $settled->status !== 'completed') {
+            return;
+        }
 
-            $wallet = $this->wallets->getOrCreateWallet($transaction->user, 'fiat', $transaction->currency_code);
-            $wallet->increment('balance', $transaction->amount);
-
-            $transaction->update(['status' => 'completed', 'processed_at' => now()]);
-        });
-
-        Notify::send($transaction->user, new AccountNotification(
+        Notify::send($settled->user, new AccountNotification(
             'Deposit Confirmed',
-            number_format((float) $transaction->amount, 2)." {$transaction->currency_code} has been credited to your wallet.",
+            number_format((float) $settled->amount, 2)." {$settled->currency_code} has been credited to your wallet.",
             'success',
             route('wallet.index')
         ));
@@ -249,10 +245,6 @@ class WalletController extends Controller
         $user = $request->user();
         $wallet = $this->wallets->getOrCreateWallet($user, $request->input('currency_type'), $request->input('currency_code'));
 
-        if (! $this->wallets->hasSufficientBalance($wallet, $request->input('amount'))) {
-            return back()->withErrors(['amount' => 'Insufficient available balance for this withdrawal.']);
-        }
-
         $destinationMeta = ['destination' => $request->input('destination')];
 
         if ($request->input('currency_type') === 'fiat') {
@@ -270,22 +262,24 @@ class WalletController extends Controller
             ];
         }
 
-        DB::transaction(function () use ($wallet, $request, $user, $destinationMeta) {
-            $locked = Wallet::query()->lockForUpdate()->find($wallet->id);
-            $locked->reserved_balance = bcadd((string) $locked->reserved_balance, (string) $request->input('amount'), 8);
-            $locked->save();
+        try {
+            DB::transaction(function () use ($wallet, $request, $user, $destinationMeta) {
+                $locked = $this->wallets->reserve($wallet, $request->input('amount'));
 
-            Transaction::create([
-                'user_id' => $user->id,
-                'wallet_id' => $locked->id,
-                'type' => 'withdrawal',
-                'amount' => $request->input('amount'),
-                'currency_code' => $locked->currency_code,
-                'status' => 'pending',
-                'reference' => Transaction::generateReference('WD'),
-                'metadata' => $destinationMeta,
-            ]);
-        });
+                Transaction::create([
+                    'user_id' => $user->id,
+                    'wallet_id' => $locked->id,
+                    'type' => 'withdrawal',
+                    'amount' => $request->input('amount'),
+                    'currency_code' => $locked->currency_code,
+                    'status' => 'pending',
+                    'reference' => Transaction::generateReference('WD'),
+                    'metadata' => $destinationMeta,
+                ]);
+            });
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['amount' => 'Insufficient available balance for this withdrawal.'])->withInput();
+        }
 
         ActivityLog::record($user->id, 'withdrawal_requested', ['amount' => $request->input('amount'), 'currency' => $request->input('currency_code')]);
 

@@ -84,6 +84,7 @@
                                 @if ($minSellUsd > 0)
                                     <p class="text-xs text-charcoal-400">Minimum sell: <strong class="text-charcoal-600 dark:text-charcoal-300">${{ number_format($minSellUsd, 2) }}</strong> USD-equivalent.</p>
                                 @endif
+                                <p class="text-xs text-charcoal-400">If you already hold this coin in your Ecozeen wallet, the order holds that balance until the sale is confirmed. Those coins cannot be withdrawn while the sale is open.</p>
                                 <livewire:sell-calculator />
 
                                 <div>

@@ -25,6 +25,8 @@ class WalletBalanceDisplayTest extends TestCase
         // Available (300) must be shown; the raw total (500) must not be
         // displayed as if it were spendable.
         $response->assertSee('300.00');
+        $response->assertSee('200.00 held');
+        $response->assertDontSee('+200.00');
         $response->assertDontSee('500.00');
     }
 
@@ -40,8 +42,8 @@ class WalletBalanceDisplayTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('0.750000');
-        $response->assertSee('pending withdrawal');
-        $response->assertSee('1.000000 total');
+        $response->assertSee('held and not available');
+        $response->assertDontSee('1.000000 total');
     }
 
     public function test_wallet_index_shows_plain_available_label_when_nothing_is_reserved(): void
@@ -72,6 +74,6 @@ class WalletBalanceDisplayTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('600.000000');
-        $response->assertSee('400.000000 reserved');
+        $response->assertSee('400.000000 held, not available');
     }
 }

@@ -190,9 +190,14 @@
                 @endif
 
                 @if ($transaction->type === 'sell')
+                    @if (($transaction->metadata['funding_source'] ?? null) === 'wallet')
+                        <p class="w-full text-sm text-charcoal-500">This sale is funded by the user's Ecozeen wallet. The coins are already held. Confirming pays their fiat and removes the coins from their balance. Do not also expect an on-chain deposit.</p>
+                    @else
+                        <p class="w-full text-sm text-charcoal-500">This sale is funded from outside Ecozeen. Confirm only after the crypto has actually arrived on-chain.</p>
+                    @endif
                     <form method="POST" action="{{ route('admin.transactions.confirm-sell', $transaction) }}">
                         @csrf
-                        <x-primary-button>Confirm Crypto Received</x-primary-button>
+                        <x-primary-button>{{ ($transaction->metadata['funding_source'] ?? null) === 'wallet' ? 'Confirm sale and pay out' : 'Confirm Crypto Received' }}</x-primary-button>
                     </form>
                 @endif
 

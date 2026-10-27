@@ -4,12 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Transaction;
 use App\Services\FlutterwaveService;
+use App\Services\PaymentSettlement;
 use App\Services\PaystackService;
-use App\Services\TradeService;
-use App\Services\WalletService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
@@ -17,8 +15,7 @@ class WebhookController extends Controller
     public function __construct(
         protected PaystackService $paystack,
         protected FlutterwaveService $flutterwave,
-        protected TradeService $trades,
-        protected WalletService $wallets,
+        protected PaymentSettlement $settlements,
     ) {}
 
     public function paystack(Request $request): Response
@@ -70,22 +67,10 @@ class WebhookController extends Controller
 
         $transaction = Transaction::query()->where('reference', $reference)->first();
 
-        if (! $transaction || $transaction->status === 'completed') {
+        if (! $transaction || ! in_array($transaction->type, ['buy', 'deposit'], true)) {
             return;
         }
 
-        DB::transaction(function () use ($transaction) {
-            if ($transaction->type === 'buy') {
-                $this->trades->completeBuy($transaction);
-
-                return;
-            }
-
-            if ($transaction->type === 'deposit') {
-                $wallet = $this->wallets->getOrCreateWallet($transaction->user, 'fiat', $transaction->currency_code);
-                $wallet->increment('balance', $transaction->amount);
-                $transaction->update(['status' => 'completed', 'processed_at' => now()]);
-            }
-        });
+        $this->settlements->settle($transaction);
     }
 }

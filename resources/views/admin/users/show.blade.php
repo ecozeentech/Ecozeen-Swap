@@ -123,7 +123,7 @@
                             <p class="text-xs text-charcoal-400">{{ $wallet->currency_code }}</p>
                             <p class="font-bold">{{ number_format($wallet->availableBalance(), 6) }} <span class="text-xs font-normal text-charcoal-400">available</span></p>
                             @if ((float) $wallet->reserved_balance > 0)
-                                <p class="text-[11px] text-amber-500">{{ number_format($wallet->reserved_balance, 6) }} reserved (pending withdrawal)</p>
+                                <p class="text-[11px] text-amber-500">{{ number_format($wallet->reserved_balance, 6) }} held, not available</p>
                             @endif
                         </div>
                     @endforeach
